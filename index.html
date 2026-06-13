@@ -103,6 +103,16 @@
   .hero .desc{color:var(--ink-dim);margin-top:14px;font-size:14.5px;max-width:40ch}
   .hero .cta{margin-top:22px;display:flex;gap:12px;flex-wrap:wrap}
 
+  /* hero as centered title screen (demo moved below experiment) */
+  .hero-solo{display:block;text-align:center;margin-top:46px;margin-bottom:6px}
+  .hero-solo .hero-inner{max-width:640px;margin:0 auto;padding:14px 0 4px}
+  .hero-solo .desc{margin-left:auto;margin-right:auto;max-width:46ch}
+  .hero-solo .cta{justify-content:center}
+
+  /* demo recap section (after experiment) */
+  .demo-wrap{display:grid;grid-template-columns:auto 1fr;gap:30px;align-items:center;margin-top:22px}
+  .demo-side{min-width:0}
+
   .btn{
     font-family:var(--sans);font-size:14.5px;font-weight:700;cursor:pointer;
     padding:12px 20px;border-radius:999px;border:1px solid var(--glass-line-strong);
@@ -138,7 +148,7 @@
     background:linear-gradient(90deg,rgba(255,255,255,.32),rgba(255,255,255,.08),rgba(255,255,255,.3))}
   .water{position:absolute;left:0;right:0;bottom:0;height:30px;border-radius:0 0 15px 15px;
     background:linear-gradient(180deg,rgba(120,200,255,.32),rgba(90,150,255,.22));
-    border-top:1px solid rgba(180,220,255,.4)}
+    border-top:1px solid rgba(180,220,255,.4);transition:opacity .5s}
   .paper{
     position:absolute;left:50%;transform:translateX(-50%);bottom:8px;
     width:62px;height:272px;border-radius:5px 5px 0 0;
@@ -149,9 +159,9 @@
   .paper .wetfront{position:absolute;left:0;right:0;bottom:0;height:0;
     background:linear-gradient(180deg,rgba(150,200,255,.0),rgba(150,200,255,.16));pointer-events:none}
   .baseline{position:absolute;left:0;right:0;border-top:1.5px dashed #b9aa86}
-  .dot{position:absolute;left:50%;transform:translateX(-50%);width:20px;height:9px;border-radius:50%;
+  .dot{position:absolute;left:50%;transform:translateX(-50%);width:11px;height:11px;border-radius:50%;
     opacity:0;transition:opacity .5s, background .2s; filter:blur(.3px)}
-  .beaker.mini .dot{width:16px;height:7px}
+  .beaker.mini .dot{width:9px;height:9px}
   /* 噴射式色帶：底部為尾、頂部為頭，靠高度拉長形成拖尾 */
   .band{position:absolute;left:50%;transform:translateX(-50%);width:18px;height:0;
     border-radius:9px 9px 7px 7px;opacity:0;filter:blur(1px);
@@ -218,7 +228,18 @@
   .track-wrap{display:flex;gap:18px;justify-content:center;margin:14px 0 6px}
   .track{position:relative;width:46px;height:150px;border-radius:7px;background:linear-gradient(180deg,#f3efe6,#e7e0d0);overflow:hidden;border:1px solid rgba(0,0,0,.18)}
   .track .tline{position:absolute;left:0;right:0;bottom:18px;border-top:1.5px dashed #b9aa86}
-  .track .tdot{position:absolute;left:50%;transform:translateX(-50%) translateY(0);bottom:18px;width:18px;height:8px;border-radius:50%;transition:none}
+  /* 噴射拖尾的色點：尾端固定在虛線、頭部往上衝 */
+  .track .tdot{position:absolute;left:50%;bottom:13px;transform:translateX(-50%);
+    width:11px;height:11px;border-radius:50% 50% 50% 50%;transform-origin:bottom center;
+    --tc:#ffe066;filter:blur(.4px);
+    background:linear-gradient(180deg,
+      var(--tc) 0%, var(--tc) 22%,
+      color-mix(in srgb, var(--tc) 60%, transparent) 46%,
+      color-mix(in srgb, var(--tc) 26%, transparent) 70%,
+      color-mix(in srgb, var(--tc) 6%, transparent) 86%,
+      transparent 100%);}
+  .track .tdot .thead{position:absolute;top:-1px;left:50%;transform:translateX(-50%);
+    width:104%;height:11px;border-radius:50%;background:var(--tc);filter:blur(.3px)}
   .track-cap{font-size:11.5px;text-align:center;color:var(--ink-soft);margin-top:6px}
 
   /* solvent matcher */
@@ -287,7 +308,16 @@
   .dyk-strip{position:relative;width:44px;height:130px;border-radius:6px;overflow:hidden;margin:0 auto;
     background:linear-gradient(180deg,#f3efe6,#e7e0d0);border:1px solid rgba(0,0,0,.18)}
   .dyk-strip .bl{position:absolute;left:0;right:0;bottom:14px;border-top:1.5px dashed #b9aa86}
-  .dyk-band{position:absolute;left:50%;transform:translateX(-50%);width:17px;height:7px;border-radius:50%;filter:blur(.8px)}
+  .dyk-band{position:absolute;left:50%;bottom:11px;transform:translateX(-50%);
+    width:13px;height:9px;border-radius:50%;transform-origin:bottom center;
+    --dc:#fff;filter:blur(.6px);
+    background:linear-gradient(180deg,
+      var(--dc) 0%, var(--dc) 24%,
+      color-mix(in srgb, var(--dc) 58%, transparent) 48%,
+      color-mix(in srgb, var(--dc) 24%, transparent) 72%,
+      transparent 100%);}
+  .dyk-band .dhead{position:absolute;top:-1px;left:50%;transform:translateX(-50%);
+    width:104%;height:9px;border-radius:50%;background:var(--dc);filter:blur(.3px)}
   .case-row{display:flex;gap:16px;justify-content:center;align-items:stretch;flex-wrap:wrap;margin:16px 0 4px}
   .suspects{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
   .evcard,.suspect{padding:10px 10px 8px;border-radius:14px;border:1px solid var(--glass-line);background:var(--glass)}
@@ -304,6 +334,8 @@
 
   @media (max-width:780px){
     .hero{grid-template-columns:1fr}
+    .demo-wrap{grid-template-columns:1fr;justify-items:center;text-align:center}
+    .demo-side{text-align:center}
     .lab{grid-template-columns:1fr}
     .duo{grid-template-columns:1fr}
     .matcher{grid-template-columns:1fr}
@@ -331,10 +363,11 @@
       <button data-t="hero" class="active">開始</button>
       <button data-t="think">想想看</button>
       <button data-t="exp1">實驗一</button>
+      <button data-t="demo">完整看一次</button>
       <button data-t="why">為什麼往上爬</button>
       <button data-t="oilwater">油性 vs 水性</button>
-      <button data-t="principle">原理</button>
       <button data-t="didyouknow">你知道嗎</button>
+      <button data-t="principle">原理</button>
       <button data-t="quiz">小測驗</button>
     </div>
   </nav>
@@ -343,30 +376,15 @@
 <div class="wrap">
 
   <!-- HERO -->
-  <section id="hero" class="hero">
-    <div>
+  <section id="hero" class="hero hero-solo">
+    <div class="hero-inner">
       <div class="eyebrow"><span class="no">自然科學實驗</span> · 四年級</div>
       <h1>色層分析</h1>
       <div class="sub">藏在一個顏色裡的秘密</div>
-      <p class="desc">一枝棕色筆，看起來只有一種顏色。可是把它放進水裡，竟然會跑出好幾種色料——這就是色層分析。</p>
+      <p class="desc">一枝棕色筆，看起來只有一種顏色。可是把它放進水裡，竟然會跑出好幾種色料——這就是色層分析。動手做做看，再回頭看一次完整的分離！</p>
       <div class="cta">
         <button class="btn primary" data-t="exp1">▶ 馬上做實驗</button>
-        <button class="btn" id="heroReplay">重播分離過程</button>
-      </div>
-    </div>
-    <div class="hero-card">
-      <div class="cap-title">DEMO ── 棕色筆的色層分析</div>
-      <div class="strip-stage">
-        <div class="beaker mini" id="heroBeaker">
-          <div class="beaker-rim"></div>
-          <div class="paper" id="heroPaper">
-            <div class="wetfront" id="heroWet"></div>
-            <div class="baseline" id="heroBase"></div>
-            <div class="dot" id="heroDot"></div>
-            <div class="bands" id="heroBands"></div>
-          </div>
-          <div class="water"></div>
-        </div>
+        <button class="btn" data-t="think">先想想看</button>
       </div>
     </div>
   </section>
@@ -417,7 +435,7 @@
               <div class="dot" id="expDot"></div>
               <div class="bands" id="expBands"></div>
             </div>
-            <div class="water"></div>
+            <div class="water" id="expWater" style="opacity:0"></div>
           </div>
         </div>
         <div class="stage-tag" id="stageTag">← 先在右邊選一枝筆</div>
@@ -461,6 +479,33 @@
     </div>
   </section>
 
+  <!-- DEMO（做完實驗再看完整分離） -->
+  <section id="demo" class="panel">
+    <div class="eyebrow"><span class="no">★</span> 完整看一次</div>
+    <h2 class="sec">棕色筆的色層分析・全程示範</h2>
+    <p class="lead">剛剛親手做過了，現在從頭到尾完整看一次——棕色其實藏著黃、紅、藍，被水一路帶上去、分了開來。</p>
+
+    <div class="demo-wrap">
+      <div class="strip-stage">
+        <div class="beaker" id="heroBeaker">
+          <div class="beaker-rim"></div>
+          <div class="paper" id="heroPaper">
+            <div class="wetfront" id="heroWet"></div>
+            <div class="baseline" id="heroBase"></div>
+            <div class="dot" id="heroDot"></div>
+            <div class="bands" id="heroBands"></div>
+          </div>
+          <div class="water"></div>
+        </div>
+      </div>
+      <div class="demo-side">
+        <div class="cap-title" style="font-family:var(--mono);font-size:11px;letter-spacing:2px;color:var(--ink-dim);margin-bottom:12px">DEMO ── 棕色筆的色層分析</div>
+        <p style="font-size:14px;color:var(--ink-soft);margin-bottom:16px">看水沿著濾紙往上爬，把混在一起的色料噴射般帶開，停在不同高度。</p>
+        <button class="btn primary" id="heroReplay">▶ 重播分離過程</button>
+      </div>
+    </div>
+  </section>
+
   <!-- WHY -->
   <section id="why" class="panel">
     <div class="eyebrow"><span class="no">03</span> 說說看</div>
@@ -481,11 +526,11 @@
         <h4>為什麼有的爬高、有的爬低？</h4>
         <div class="track-wrap">
           <div>
-            <div class="track"><div class="tline"></div><div class="tdot" id="dotHigh" style="background:#ffe066"></div></div>
+            <div class="track"><div class="tline"></div><div class="tdot" id="dotHigh" style="--tc:#ffe066"><div class="thead"></div></div></div>
             <div class="track-cap">附著力<b>小</b><br>爬得高</div>
           </div>
           <div>
-            <div class="track"><div class="tline"></div><div class="tdot" id="dotLow" style="background:#5cd6ff"></div></div>
+            <div class="track"><div class="tline"></div><div class="tdot" id="dotLow" style="--tc:#5cd6ff"><div class="thead"></div></div></div>
             <div class="track-cap">附著力<b>大</b><br>爬得低</div>
           </div>
         </div>
@@ -525,30 +570,11 @@
     <p style="margin-top:16px;font-size:13px;color:var(--ink-dim)">提醒：汽油、丙酮是有機溶劑，有味道也易燃，課堂上由老師示範操作。</p>
   </section>
 
-  <!-- PRINCIPLE -->
-  <section id="principle" class="panel">
-    <div class="eyebrow"><span class="no">05</span> 原理</div>
-    <h2 class="sec">色層分析法是怎麼運作的</h2>
-    <p class="lead">把整個過程拆開來看，其實只有三個關鍵角色互相配合。</p>
-
-    <div class="flow">
-      <div class="node"><div class="big">🎨</div><h4>混合的色料</h4><p>一個顏色，其實是好幾種色料混在一起。</p></div>
-      <div class="arr">→</div>
-      <div class="node"><div class="big">💧</div><h4>溶劑帶著跑</h4><p>水（或汽油）沿著濾紙的毛細現象往上爬，把色料一起帶上去。</p></div>
-      <div class="arr">→</div>
-      <div class="node"><div class="big">🌈</div><h4>分離成色譜</h4><p>附著力不同，每種色料停在不同高度，就分開了。</p></div>
-    </div>
-
-    <div class="def">
-      <span class="term">色層分析法</span>　用溶劑（如水、汽油），利用毛細現象，把混在一起的不同色料分離開來的方法。
-    </div>
-  </section>
-
   <!-- DID YOU KNOW -->
   <section id="didyouknow" class="panel">
-    <div class="eyebrow"><span class="no">06</span> 你知道嗎？</div>
+    <div class="eyebrow"><span class="no">05</span> 你知道嗎？</div>
     <h2 class="sec">色層分析的兩個小秘密</h2>
-    <p class="lead">學會原理之後，再看兩件有趣的事：最「不單純」的顏色，還有色層分析怎麼幫忙抓壞人。</p>
+    <p class="lead">在進入原理之前，先看兩件有趣的事：最「不單純」的顏色，還有色層分析怎麼幫忙抓壞人。</p>
 
     <div class="duo">
       <div class="mini-card">
@@ -575,6 +601,26 @@
         <p style="margin-top:12px;font-size:13px;color:var(--ink-dim)">每個廠牌墨水的色料配方不同，色譜就像墨水的「指紋」。鑑識科學真的會用色層分析比對文件上的墨水，偵辦偽造、竄改案件。</p>
       </div>
     </div>
+  </section>
+
+  <!-- PRINCIPLE -->
+  <section id="principle" class="panel">
+    <div class="eyebrow"><span class="no">06</span> 原理</div>
+    <h2 class="sec">色層分析法是怎麼運作的</h2>
+    <p class="lead">把整個過程拆開來看，其實只有三個關鍵角色互相配合。</p>
+
+    <div class="flow">
+      <div class="node"><div class="big">🎨</div><h4>混合的色料</h4><p>一個顏色，其實是好幾種色料混在一起。</p></div>
+      <div class="arr">→</div>
+      <div class="node"><div class="big">💧</div><h4>溶劑帶著跑</h4><p>水（或汽油）沿著濾紙的毛細現象往上爬，把色料一起帶上去。</p></div>
+      <div class="arr">→</div>
+      <div class="node"><div class="big">🌈</div><h4>分離成色譜</h4><p>附著力不同，每種色料停在不同高度，就分開了。</p></div>
+    </div>
+
+    <div class="def">
+      <span class="term">色層分析法</span>　用溶劑（如水、汽油），利用毛細現象，把混在一起的不同色料分離開來的方法。
+    </div>
+    <p style="margin-top:14px;font-size:13px;color:var(--ink-dim)">💡 小提醒：每種色料爬多高，是由<b>染料本身的性質</b>（對水和對紙的親和力）決定的，跟它是什麼顏色沒有關係。所以同樣標示「黃色」，不同墨水的爬升高度也可能不一樣——實際分離出的色料與高低順序會因<b>墨水品牌</b>而不同，本頁的色帶為示意結果。</p>
   </section>
 
   <!-- QUIZ -->
@@ -630,8 +676,10 @@ function setupStrip(paperEl){
   const range = frontMax - baseFromBottom;
   const base = paperEl.querySelector('.baseline');
   const dot  = paperEl.querySelector('.dot');
+  const mini = paperEl.closest('.beaker') && paperEl.closest('.beaker').classList.contains('mini');
+  const dotR = mini ? 4.5 : 5.5;               // 圓點半徑，用來置中於基準線
   if(base) base.style.bottom = baseFromBottom+'px';
-  if(dot)  dot.style.bottom  = (baseFromBottom-4)+'px';
+  if(dot)  dot.style.bottom  = (baseFromBottom-dotR)+'px';
   return {h, baseFromBottom, frontMax, range};
 }
 
@@ -710,11 +758,17 @@ function resetStrip(paperEl, dotColor){
   if(dotColor) dot.style.background = dotColor;
 }
 
-/* ============ HERO 自動示範 ============ */
+/* ============ DEMO 完整示範（捲到可視範圍才播放） ============ */
 const heroPaper = document.getElementById('heroPaper');
-function playHero(){ resetStrip(heroPaper); runStrip(heroPaper, PENS.brownA, {dur:4200}); }
-window.addEventListener('load', ()=> setTimeout(playHero, 500));
+let demoPlayed = false;
+function playHero(){ resetStrip(heroPaper); runStrip(heroPaper, PENS.brownA, {dur:4600}); }
 document.getElementById('heroReplay').addEventListener('click', playHero);
+const demoObs = new IntersectionObserver((entries)=>{
+  entries.forEach(en=>{
+    if(en.isIntersecting && !demoPlayed){ demoPlayed = true; setTimeout(playHero, 250); }
+  });
+},{threshold:0.45});
+demoObs.observe(document.getElementById('demo'));
 
 /* ============ 實驗一 互動 ============ */
 const expPaper = document.getElementById('expPaper');
@@ -725,6 +779,7 @@ const resetBtn = document.getElementById('resetBtn');
 const dotCount = document.getElementById('dotCount');
 const expReadout = document.getElementById('expReadout');
 const stageTag = document.getElementById('stageTag');
+const expWater = document.getElementById('expWater');
 let curPenKey = null, dotted = false, running = false;
 
 // 建立色筆色票
@@ -739,6 +794,7 @@ Object.keys(PENS).forEach(key=>{
     sw.classList.add('sel');
     curPenKey = key; dotted=false;
     resetStrip(expPaper);
+    if(expWater) expWater.style.opacity='0';
     dotBtn.disabled=false; runBtn.disabled=true; dotCount.textContent='';
     stageTag.textContent = '已選：'+p.label+' → 按「點上色料」';
     expReadout.textContent = '已選好「'+p.label+'」。接著點上色料。';
@@ -769,6 +825,7 @@ runBtn.addEventListener('click', ()=>{
   if(!curPenKey || !dotted || running) return;
   const pen = PENS[curPenKey];
   running=true; runBtn.disabled=true; dotBtn.disabled=true;
+  if(expWater) expWater.style.opacity='1';   // 加水後水才出現
   stageTag.textContent='水正沿著濾紙往上爬…';
   expReadout.textContent='觀察中：色料正被水帶上去，慢慢分開…';
   runStrip(expPaper, pen, {dur:5000, onDone:()=>{
@@ -781,6 +838,7 @@ runBtn.addEventListener('click', ()=>{
 resetBtn.addEventListener('click', ()=>{
   running=false; dotted=false;
   resetStrip(expPaper, curPenKey?PENS[curPenKey].dot:null);
+  if(expWater) expWater.style.opacity='0';   // 回到未加水狀態
   dotBtn.disabled = !curPenKey; runBtn.disabled=true; dotCount.textContent='';
   stageTag.textContent = curPenKey? '重來：按「點上色料」' : '← 先在右邊選一枝筆';
   expReadout.textContent = curPenKey? '已重設，重新點色料試試看。' : '選好筆、點上色料、加水，結果會顯示在這裡。';
@@ -797,7 +855,8 @@ function showResult(pen){
   expReadout.innerHTML =
     '<b>'+pen.label+'</b> 其實藏了 <b>'+pen.bands.length+'</b> 種色料：'+
     '<div class="chips">'+chips+'</div>'+
-    '<div style="margin-top:10px">爬得最高的是「<b>'+top.n+'</b>」→ 它對紙的附著力最小，最容易被水帶走。色帶有濃有淡：「<b>'+main.n+'</b>」最濃，代表這枝筆裡它的比例最多。</div>';
+    '<div style="margin-top:10px">爬得最高的是「<b>'+top.n+'</b>」→ 它對紙的附著力最小，最容易被水帶走。色帶有濃有淡：「<b>'+main.n+'</b>」最濃，代表這枝筆裡它的比例最多。</div>'+
+    '<div style="margin-top:10px;font-size:12.5px;color:var(--ink-dim);border-top:1px solid var(--glass-line);padding-top:9px">💡 色料爬多高，由染料本身的性質決定，跟顏色無關。實際的色料種類與高低順序會因<b>墨水品牌</b>而不同，這裡是示意結果。</div>';
 }
 
 /* ============ 想想看 ============ */
@@ -837,24 +896,36 @@ document.getElementById('capBtn').addEventListener('click', ()=>{
   });
 });
 
-/* ============ 附著力 比一比 ============ */
+/* ============ 附著力 比一比（噴射拖尾） ============ */
 const dotHigh=document.getElementById('dotHigh');
 const dotLow=document.getElementById('dotLow');
+const DOT_BASE_H=11;  // 圓點原始直徑
+function jetDot(el, targetY, dur){
+  const easeJet = t => t<0?0 : 1 - Math.pow(1-t, 3);
+  const t0=performance.now();
+  function frame(now){
+    let p=(now-t0)/dur; if(p>1)p=1;
+    const e=easeJet(p);
+    const headY=e*targetY;                       // 頭部上升高度
+    const tailLen=DOT_BASE_H + headY*(1-e*0.6);  // 噴出時尾巴長，停下凝聚
+    el.style.height=tailLen+'px';
+    el.style.transform='translateX(-50%) translateY(-'+(headY-(tailLen-DOT_BASE_H))+'px)';
+    if(p<1) requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
 document.getElementById('affBtn').addEventListener('click', ()=>{
-  dotHigh.style.transition='none'; dotLow.style.transition='none';
-  dotHigh.style.transform='translateX(-50%) translateY(0)';
-  dotLow.style.transform='translateX(-50%) translateY(0)';
+  // 先歸零
+  [dotHigh,dotLow].forEach(d=>{
+    d.style.height=DOT_BASE_H+'px';
+    d.style.transform='translateX(-50%) translateY(0)';
+  });
   if(REDUCED){
-    dotHigh.style.transform='translateX(-50%) translateY(-105px)';
-    dotLow.style.transform='translateX(-50%) translateY(-42px)';
+    dotHigh.style.height=(DOT_BASE_H+105)+'px';
+    dotLow.style.height=(DOT_BASE_H+42)+'px';
     return;
   }
-  requestAnimationFrame(()=>{
-    dotHigh.style.transition='transform 2.6s ease-out';
-    dotLow.style.transition='transform 2.6s ease-out';
-    dotHigh.style.transform='translateX(-50%) translateY(-105px)';
-    dotLow.style.transform='translateX(-50%) translateY(-42px)';
-  });
+  requestAnimationFrame(()=>{ jetDot(dotHigh,105,2600); jetDot(dotLow,42,2600); });
 });
 
 /* ============ 油性 / 水性 溶劑配對 ============ */
@@ -1009,14 +1080,38 @@ const CASE_PATTERNS=[
   [{c:'#ffa64a',rf:.80},{c:'#5ce6a8',rf:.48},{c:'#4aa3ff',rf:.18}],
   [{c:'#ffd94a',rf:.92},{c:'#b18cff',rf:.40}],
 ];
-function renderDyk(el,pat){
+function renderDyk(el,pat,animate){
   el.innerHTML='<div class="bl"></div>';
-  const h=130,base=14,range=h-base-16;
-  pat.forEach(b=>{
+  const h=130, base=14, range=h-base-18;   // 可上升範圍
+  const bands = pat.map(b=>{
     const d=document.createElement('div');d.className='dyk-band';
-    d.style.background=b.c;d.style.bottom=(base+b.rf*range-3)+'px';
+    d.style.setProperty('--dc', b.c);
+    d.innerHTML='<div class="dhead"></div>';
     el.appendChild(d);
+    return {el:d, rf:b.rf};
   });
+  const BH=9; // 色帶原始高度
+  const settle = (band)=>{
+    const headY = band.rf*range;
+    band.el.style.height = BH+'px';
+    band.el.style.transform = 'translateX(-50%) translateY(-'+headY+'px)';
+  };
+  if(!animate || REDUCED){ bands.forEach(settle); return; }
+  // 噴射動畫
+  const easeJet = t => t<0?0 : 1 - Math.pow(1-t,3);
+  const dur=1500, t0=performance.now();
+  function frame(now){
+    let p=(now-t0)/dur; if(p>1)p=1;
+    const e=easeJet(p);
+    bands.forEach(band=>{
+      const headY=e*band.rf*range;
+      const tailLen=BH + headY*(1-e*0.6);
+      band.el.style.height=tailLen+'px';
+      band.el.style.transform='translateX(-50%) translateY(-'+(headY-(tailLen-BH))+'px)';
+    });
+    if(p<1) requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
 }
 const evidStrip=document.getElementById('evidStrip');
 const suspectsBox=document.getElementById('suspects');
@@ -1026,14 +1121,16 @@ function newCase(){
   const order=[0,1,2].sort(()=>Math.random()-.5);
   const evid=Math.floor(Math.random()*3);
   caseAnswer=order.indexOf(evid);
-  renderDyk(evidStrip,CASE_PATTERNS[evid]);
+  renderDyk(evidStrip,CASE_PATTERNS[evid],true);
   suspectsBox.innerHTML='';
   verdict.textContent='';
   ['甲','乙','丙'].forEach((nm,i)=>{
     const btn=document.createElement('button');btn.className='suspect';
     btn.innerHTML='<div class="dyk-strip"></div><div class="s-name">嫌疑筆 '+nm+'</div>';
     suspectsBox.appendChild(btn);
-    renderDyk(btn.querySelector('.dyk-strip'),CASE_PATTERNS[order[i]]);
+    const strip=btn.querySelector('.dyk-strip');
+    renderDyk(strip,CASE_PATTERNS[order[i]],false);          // 先靜態放好
+    setTimeout(()=>renderDyk(strip,CASE_PATTERNS[order[i]],true), 150+i*120); // 再依序噴射
     btn.addEventListener('click',()=>{
       if(btn.disabled)return;
       if(i===caseAnswer){
