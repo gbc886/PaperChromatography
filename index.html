@@ -1,1107 +1,1075 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>調酒師特訓 · 神奇蝶豆花實驗室</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>色層分析・藏在一個顏色裡的秘密</title>
 <style>
   :root{
-    --ink:#eef2fc;        /* page background fallback */
-    --ink-2:rgba(255,255,255,0.55);   /* frosted inner tile */
-    --ink-3:rgba(226,233,251,0.78);   /* cool frosted tile */
-    --panel:rgba(255,255,255,0.52);   /* frosted glass card */
-    --line:rgba(120,140,205,0.26);    /* cool crystalline hairline */
-    --pea:#3a52d6;        /* 中性 · 蝶豆花藍 */
-    --acid:#cf1f6e;       /* 酸性 · 紫紅 */
-    --base:#0a9472;       /* 鹼性 · 藍綠 */
-    --sugar:#c9870f;      /* 糖 · 金黃 */
-    --paper:#1b2147;      /* main text */
-    --muted:#566087;      /* muted text */
-    --good:#168a4d;
-    --bad:#d62f47;
-    --r:22px;
-    --shadow:0 16px 44px rgba(70,90,160,.16);
-    --glass-edge:rgba(255,255,255,0.78);
+    --bg-0:#0a1030; --bg-1:#131d4c; --bg-2:#241a51;
+    --ink:#eef1ff; --ink-soft:#aab2dd; --ink-dim:#7c85b8;
+    --glass:rgba(255,255,255,.065);
+    --glass-2:rgba(255,255,255,.11);
+    --glass-line:rgba(255,255,255,.17);
+    --glass-line-strong:rgba(255,255,255,.34);
+    --shadow:0 20px 55px rgba(3,6,26,.55);
+    --shadow-sm:0 8px 24px rgba(3,6,26,.4);
+    --c-red:#ff6b81; --c-amber:#ffb15c; --c-yellow:#ffe066;
+    --c-green:#5ce6a8; --c-cyan:#5cd6ff; --c-violet:#b18cff;
+    --good:#46e3a0; --bad:#ff708a;
+    --r:22px; --r-sm:14px;
+    --mono:"SFMono-Regular","SF Mono",Consolas,"Cascadia Code","Noto Sans Mono",monospace;
+    --sans:"Microsoft JhengHei","微軟正黑體","PingFang TC","Noto Sans TC","Heiti TC",-apple-system,system-ui,sans-serif;
   }
   *{box-sizing:border-box;margin:0;padding:0}
   html{scroll-behavior:smooth}
   body{
-    font-family:'Fredoka','Noto Sans TC',system-ui,sans-serif;
-    background:
-      radial-gradient(820px 620px at 10% 4%, rgba(120,160,255,.22), transparent 56%),
-      radial-gradient(760px 680px at 92% 0%, rgba(226,120,200,.18), transparent 55%),
-      radial-gradient(880px 760px at 78% 102%, rgba(90,225,200,.18), transparent 55%),
-      radial-gradient(720px 640px at 2% 96%, rgba(170,140,255,.18), transparent 55%),
-      linear-gradient(180deg, #f3f6ff, #e9eefb);
-    background-attachment:fixed;
-    color:var(--paper);
-    line-height:1.65;
+    font-family:var(--sans);
+    color:var(--ink);
+    background:var(--bg-0);
+    line-height:1.7;
     min-height:100vh;
+    overflow-x:hidden;
     -webkit-font-smoothing:antialiased;
   }
-  .wrap{max-width:1080px;margin:0 auto;padding:0 18px}
+  /* ambient refracted-light background */
+  .bg{position:fixed;inset:0;z-index:-2;
+    background:
+      radial-gradient(120% 90% at 80% -10%, #2a2a6e 0%, transparent 55%),
+      radial-gradient(110% 80% at -10% 10%, #16245c 0%, transparent 50%),
+      linear-gradient(160deg, var(--bg-0) 0%, var(--bg-1) 48%, var(--bg-2) 100%);
+  }
+  .orb{position:fixed;z-index:-1;border-radius:50%;filter:blur(70px);opacity:.5;pointer-events:none}
+  .orb.a{width:42vw;height:42vw;left:-8vw;top:8vh;background:radial-gradient(circle,#5cd6ff,transparent 70%);animation:float1 22s ease-in-out infinite}
+  .orb.b{width:38vw;height:38vw;right:-6vw;top:30vh;background:radial-gradient(circle,#b18cff,transparent 70%);animation:float2 26s ease-in-out infinite}
+  .orb.c{width:34vw;height:34vw;left:25vw;bottom:-12vh;background:radial-gradient(circle,#ff6b81,transparent 70%);opacity:.35;animation:float1 30s ease-in-out infinite}
+  @keyframes float1{0%,100%{transform:translate(0,0)}50%{transform:translate(4vw,5vh)}}
+  @keyframes float2{0%,100%{transform:translate(0,0)}50%{transform:translate(-5vw,-4vh)}}
 
-  /* ---------- Top bar ---------- */
-  header{
-    position:sticky;top:0;z-index:50;
-    backdrop-filter:blur(22px) saturate(140%);
-    -webkit-backdrop-filter:blur(22px) saturate(140%);
-    background:linear-gradient(180deg, rgba(255,255,255,.66), rgba(255,255,255,.42));
-    border-bottom:1px solid var(--glass-edge);
-    box-shadow:0 6px 24px rgba(70,90,160,.08);
+  /* top spectrum hairline + nav */
+  .topbar{position:sticky;top:0;z-index:50}
+  .spectrum-line{height:3px;background:linear-gradient(90deg,var(--c-red),var(--c-amber),var(--c-yellow),var(--c-green),var(--c-cyan),var(--c-violet))}
+  nav{
+    display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+    padding:11px 22px;
+    background:rgba(12,16,42,.55);
+    backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+    border-bottom:1px solid var(--glass-line);
   }
-  .bar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:12px 18px;max-width:1080px;margin:0 auto}
-  .brand{display:flex;align-items:center;gap:11px;margin-right:auto}
-  .logo{
-    width:42px;height:42px;border-radius:13px;flex:0 0 auto;
-    background:conic-gradient(from 200deg,var(--acid),var(--pea),var(--base),var(--sugar),var(--acid));
-    box-shadow:0 0 22px rgba(67,97,238,.6), inset 0 0 12px rgba(255,255,255,.25);
-    position:relative;
+  .brand{font-weight:800;letter-spacing:.5px;font-size:15px;display:flex;align-items:center;gap:9px;margin-right:6px}
+  .brand .prism{width:18px;height:18px;border-radius:5px;background:conic-gradient(from 200deg,var(--c-red),var(--c-amber),var(--c-yellow),var(--c-green),var(--c-cyan),var(--c-violet),var(--c-red));box-shadow:0 0 14px rgba(140,170,255,.6)}
+  .navpills{display:flex;gap:7px;flex-wrap:wrap;margin-left:auto}
+  .navpills button{
+    font-size:12.5px;color:var(--ink-soft);text-decoration:none;
+    padding:6px 12px;border-radius:999px;border:1px solid transparent;
+    background:transparent;cursor:pointer;font-family:var(--sans);
+    transition:.18s; white-space:nowrap;
   }
-  .logo::after{content:"🍸";position:absolute;inset:0;display:grid;place-items:center;font-size:20px}
-  .brand h1{font-size:1.18rem;font-weight:700;letter-spacing:.3px;line-height:1.1}
-  .brand small{display:block;color:var(--muted);font-size:.72rem;font-weight:500;letter-spacing:.12em}
-  nav{display:flex;gap:6px;flex-wrap:wrap}
-  .tab{
-    appearance:none;border:1px solid var(--line);background:var(--ink-2);
-    color:var(--muted);font-family:inherit;font-weight:600;font-size:.92rem;
-    padding:9px 15px;border-radius:999px;cursor:pointer;transition:.2s;white-space:nowrap;
-    backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
-  }
-  .tab:hover{color:var(--paper);border-color:rgba(120,140,205,.5);transform:translateY(-1px)}
-  .tab[aria-selected="true"]{
-    color:#fff;background:linear-gradient(160deg,#5b78f0,var(--pea) 65%);
-    border-color:rgba(255,255,255,.35);
-    box-shadow:0 8px 20px rgba(58,82,214,.34), inset 0 1px 0 rgba(255,255,255,.5);
-    text-shadow:0 1px 2px rgba(0,0,0,.18)
-  }
+  .navpills button:hover{color:var(--ink);background:var(--glass);border-color:var(--glass-line)}
+  .navpills button.active{color:#0a1030;background:linear-gradient(90deg,#bfe0ff,#d8c5ff);border-color:transparent;font-weight:700}
 
-  /* ---------- Views ---------- */
-  .view{display:none;animation:rise .45s ease both}
-  .view.active{display:block}
-  @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+  .wrap{max-width:1060px;margin:0 auto;padding:0 20px 90px}
 
-  .hero{padding:34px 0 8px}
-  .eyebrow{
-    display:inline-flex;align-items:center;gap:8px;font-size:.74rem;font-weight:700;
-    letter-spacing:.18em;color:var(--muted);border:1px solid var(--line);
-    padding:5px 13px;border-radius:999px;background:var(--ink-2)
-  }
-  .hero h2{font-size:clamp(1.7rem,4.6vw,2.7rem);font-weight:900;line-height:1.12;margin:14px 0 8px}
-  .hero h2 .hl{
-    background:linear-gradient(110deg,var(--acid),var(--pea) 50%,var(--base));
-    -webkit-background-clip:text;background-clip:text;color:transparent;
-  }
-  .hero p.lead{color:#414b70;max-width:62ch;font-size:1.02rem}
-
-  .grid{display:grid;gap:22px;margin:26px 0 50px}
-  @media(min-width:880px){.lab-grid{grid-template-columns:minmax(280px,360px) 1fr}}
-
-  .card{
-    background:var(--panel);
-    border:1px solid var(--glass-edge);
+  /* glass panel */
+  .panel{
+    background:var(--glass);
+    border:1px solid var(--glass-line);
     border-radius:var(--r);
-    padding:22px;
-    box-shadow:var(--shadow), inset 0 1px 0 rgba(255,255,255,.85), inset 0 0 0 1px rgba(255,255,255,.12);
-    backdrop-filter:blur(20px) saturate(135%);
-    -webkit-backdrop-filter:blur(20px) saturate(135%);
+    box-shadow:var(--shadow);
+    backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+    padding:30px 30px;
+    margin-top:26px;
     position:relative;
+    overflow:hidden;
   }
-  .card::before{
-    content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
-    background:linear-gradient(135deg, rgba(255,255,255,.45), transparent 38%);
-    mix-blend-mode:screen;opacity:.7;
-  }
-  .card > *{position:relative}
-  .card h3{font-size:1.12rem;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:9px}
-  .card h3 .num{
-    width:26px;height:26px;border-radius:8px;display:grid;place-items:center;font-size:.85rem;
-    background:var(--ink-3);color:var(--paper);border:1px solid var(--line)
-  }
-  .hint{color:var(--muted);font-size:.9rem}
+  .panel::before{content:"";position:absolute;inset:0;border-radius:var(--r);pointer-events:none;
+    background:linear-gradient(160deg,rgba(255,255,255,.10),transparent 40%)}
 
-  /* ---------- Vessel stage ---------- */
-  .stage{
-    display:grid;place-items:center;padding:18px 10px 6px;position:relative;min-height:300px;
-    background:radial-gradient(closest-side, rgba(67,97,238,.10), transparent 70%);
-    border-radius:18px;
-  }
-  .glow-wrap{position:relative;filter:drop-shadow(0 0 0 transparent);transition:filter .4s}
-  .reading{
-    text-align:center;margin-top:6px
-  }
-  .reading .ph{font-size:2.6rem;font-weight:700;line-height:1;font-family:'Fredoka',sans-serif}
-  .reading .state{font-weight:700;font-size:1.05rem;margin-top:2px;letter-spacing:.05em}
+  .eyebrow{font-family:var(--mono);font-size:11.5px;letter-spacing:2.5px;color:var(--ink-dim);text-transform:uppercase;display:flex;align-items:center;gap:10px}
+  .eyebrow .no{color:var(--c-cyan)}
+  h2.sec{font-size:clamp(22px,3.4vw,30px);font-weight:800;letter-spacing:.5px;margin:10px 0 6px}
+  .lead{color:var(--ink-soft);font-size:15.5px;max-width:62ch}
 
-  /* pH scale */
-  .scale{margin-top:18px}
-  .scale .track{
-    height:14px;border-radius:999px;position:relative;
-    background:linear-gradient(90deg,#e01e5a,#d6336c,#7048e8,#4263eb,#1098ad,#0ca678,#66a80f);
-    box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)
+  /* HERO */
+  .hero{margin-top:30px;display:grid;grid-template-columns:1.15fr .85fr;gap:26px;align-items:center}
+  .hero .eyebrow{margin-bottom:14px}
+  .hero h1{
+    font-size:clamp(40px,8vw,76px);line-height:1.02;font-weight:900;letter-spacing:2px;
+    background:linear-gradient(92deg,#ffffff 10%,#cfe2ff 40%,#d8c6ff 70%,#ffd5e2 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    text-shadow:0 6px 40px rgba(120,150,255,.25);
   }
-  .scale .ticks{display:flex;justify-content:space-between;font-size:.7rem;color:var(--muted);margin-top:6px;font-weight:600}
-  .marker{
-    position:absolute;top:50%;width:20px;height:20px;border-radius:50%;
-    background:#fff;border:3px solid var(--ink);transform:translate(-50%,-50%);
-    box-shadow:0 2px 10px rgba(0,0,0,.5);transition:left .35s cubic-bezier(.2,.9,.3,1.2)
-  }
+  .hero .sub{font-size:clamp(16px,2.4vw,20px);color:var(--ink-soft);margin-top:14px;font-weight:600;letter-spacing:1px}
+  .hero .desc{color:var(--ink-dim);margin-top:14px;font-size:14.5px;max-width:40ch}
+  .hero .cta{margin-top:22px;display:flex;gap:12px;flex-wrap:wrap}
 
-  /* big controls */
-  .controls{display:grid;gap:12px;margin-top:6px}
-  .drop-btn{
-    appearance:none;font-family:inherit;cursor:pointer;border:1px solid rgba(255,255,255,.35);color:#fff;
-    font-weight:700;font-size:1rem;padding:15px 16px;border-radius:16px;
-    display:flex;align-items:center;gap:12px;transition:.16s;
-    box-shadow:0 10px 24px rgba(40,50,110,.22), inset 0 1px 0 rgba(255,255,255,.55), inset 0 -6px 14px rgba(0,0,0,.10);
-    text-shadow:0 1px 2px rgba(0,0,0,.18)
+  .btn{
+    font-family:var(--sans);font-size:14.5px;font-weight:700;cursor:pointer;
+    padding:12px 20px;border-radius:999px;border:1px solid var(--glass-line-strong);
+    background:var(--glass-2);color:var(--ink);transition:.16s;letter-spacing:.5px;
+    backdrop-filter:blur(6px);
   }
-  .drop-btn:hover{transform:translateY(-2px) scale(1.01)}
-  .drop-btn:active{transform:translateY(0) scale(.99)}
-  .drop-btn .ico{font-size:1.4rem;filter:drop-shadow(0 1px 1px rgba(0,0,0,.2))}
-  .drop-btn small{display:block;font-weight:600;font-size:.74rem;opacity:.85}
-  .btn-acid{background:linear-gradient(160deg,#f765ab,var(--acid) 62%)}
-  .btn-base{background:linear-gradient(160deg,#2bbf99,var(--base) 62%)}
-  .btn-ice{background:linear-gradient(160deg,#7fcdf2,#2487c4 62%)}
-  .btn-ice[aria-pressed="true"]{box-shadow:0 0 0 3px rgba(58,166,221,.35),0 10px 24px rgba(40,50,110,.2), inset 0 1px 0 rgba(255,255,255,.6)}
-  .btn-reset{
-    background:var(--ink-2);color:var(--muted);font-weight:600;border:1px solid var(--line);
-    box-shadow:inset 0 1px 0 rgba(255,255,255,.7);text-shadow:none;justify-content:center;font-size:.92rem;padding:11px;
-    backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)
-  }
-  .btn-reset:hover{color:var(--paper);border-color:rgba(120,140,205,.5)}
-  input[type=range]{width:100%;accent-color:var(--pea);height:26px;cursor:pointer}
-  .slider-row label{font-size:.82rem;color:var(--muted);font-weight:600;display:flex;justify-content:space-between;margin-bottom:2px}
+  .btn:hover{transform:translateY(-2px);border-color:rgba(255,255,255,.5);background:rgba(255,255,255,.16)}
+  .btn:active{transform:translateY(0)}
+  .btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+  .btn.primary{background:linear-gradient(92deg,#7fc8ff,#b79bff);color:#0a1030;border-color:transparent;box-shadow:0 10px 28px rgba(110,140,255,.35)}
+  .btn.primary:hover{background:linear-gradient(92deg,#94d2ff,#c5acff)}
+  .btn:focus-visible,a:focus-visible,.navpills button:focus-visible,.swatch:focus-visible,.opt:focus-visible{outline:3px solid #9fe0ff;outline-offset:3px}
 
-  /* explainer */
-  .explain{
-    border-left:3px solid var(--pea);padding:12px 16px;border-radius:0 14px 14px 0;
-    background:var(--ink-2);transition:border-color .35s
+  /* hero glass card with mini sim */
+  .hero-card{
+    background:var(--glass);border:1px solid var(--glass-line);border-radius:var(--r);
+    box-shadow:var(--shadow);backdrop-filter:blur(16px);padding:22px;position:relative;overflow:hidden;
   }
-  .explain b{color:var(--paper)}
-  .swatches{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
-  .sw{flex:1;min-width:90px;border-radius:13px;padding:12px 10px;text-align:center;border:1px solid var(--line)}
-  .sw .dot{width:32px;height:32px;border-radius:50%;margin:0 auto 7px;box-shadow:0 0 16px currentColor}
-  .sw b{font-size:.9rem}.sw span{display:block;font-size:.72rem;color:var(--muted)}
+  .hero-card::after{content:"";position:absolute;top:-40%;left:-30%;width:80%;height:70%;
+    background:linear-gradient(120deg,rgba(255,255,255,.18),transparent 60%);transform:rotate(8deg);pointer-events:none}
+  .hero-card .cap-title{font-family:var(--mono);font-size:11px;letter-spacing:2px;color:var(--ink-dim);margin-bottom:12px}
 
-  /* steps */
-  .steps{list-style:none;display:grid;gap:9px;counter-reset:s}
-  .steps li{
-    counter-increment:s;display:flex;gap:12px;align-items:flex-start;font-size:.92rem;color:#3c4566;
-    background:var(--ink-2);border:1px solid var(--line);border-radius:12px;padding:11px 13px
+  /* generic chromatography strip used in hero + experiment */
+  .strip-stage{display:flex;justify-content:center;align-items:flex-end}
+  .beaker{
+    position:relative;width:160px;height:300px;border-radius:0 0 16px 16px;
+    border:1.5px solid rgba(255,255,255,.22);border-top:none;
+    background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(120,170,255,.06));
+    box-shadow:inset 0 0 30px rgba(120,170,255,.07);
   }
-  .steps li::before{
-    content:counter(s);flex:0 0 auto;width:24px;height:24px;border-radius:7px;
-    display:grid;place-items:center;font-size:.8rem;font-weight:700;color:#fff;
-    background:var(--pea)
+  .beaker.mini{width:122px;height:226px}
+  .beaker-rim{position:absolute;top:-7px;left:-6px;right:-6px;height:8px;border-radius:6px;
+    background:linear-gradient(90deg,rgba(255,255,255,.32),rgba(255,255,255,.08),rgba(255,255,255,.3))}
+  .water{position:absolute;left:0;right:0;bottom:0;height:30px;border-radius:0 0 15px 15px;
+    background:linear-gradient(180deg,rgba(120,200,255,.32),rgba(90,150,255,.22));
+    border-top:1px solid rgba(180,220,255,.4)}
+  .paper{
+    position:absolute;left:50%;transform:translateX(-50%);bottom:8px;
+    width:62px;height:272px;border-radius:5px 5px 0 0;
+    background:linear-gradient(180deg,#f3efe6,#e9e3d4);
+    box-shadow:0 0 18px rgba(0,0,0,.25);overflow:hidden;
   }
-  .gear{display:flex;flex-wrap:wrap;gap:7px;margin-top:6px}
-  .gear span{font-size:.78rem;background:var(--ink-3);border:1px solid var(--line);color:#46507a;padding:4px 10px;border-radius:999px}
+  .beaker.mini .paper{width:50px;height:204px}
+  .paper .wetfront{position:absolute;left:0;right:0;bottom:0;height:0;
+    background:linear-gradient(180deg,rgba(150,200,255,.0),rgba(150,200,255,.16));pointer-events:none}
+  .baseline{position:absolute;left:0;right:0;border-top:1.5px dashed #b9aa86}
+  .dot{position:absolute;left:50%;transform:translateX(-50%);width:20px;height:9px;border-radius:50%;
+    opacity:0;transition:opacity .5s, background .2s; filter:blur(.3px)}
+  .beaker.mini .dot{width:16px;height:7px}
+  /* 噴射式色帶：底部為尾、頂部為頭，靠高度拉長形成拖尾 */
+  .band{position:absolute;left:50%;transform:translateX(-50%);width:18px;height:0;
+    border-radius:9px 9px 7px 7px;opacity:0;filter:blur(1px);
+    --bandc:#fff;
+    background:linear-gradient(180deg,
+      var(--bandc) 0%,
+      var(--bandc) 20%,
+      color-mix(in srgb, var(--bandc) 60%, transparent) 42%,
+      color-mix(in srgb, var(--bandc) 28%, transparent) 65%,
+      color-mix(in srgb, var(--bandc) 8%, transparent) 84%,
+      transparent 100%);
+    transform-origin:bottom center;}
+  .beaker.mini .band{width:14px}
+  .band .head{position:absolute;top:-2px;left:50%;transform:translateX(-50%);
+    width:104%;height:8px;border-radius:50%;background:var(--bandc);
+    box-shadow:0 0 8px 1.5px var(--bandc);filter:blur(.3px)}
+  .beaker.mini .band .head{height:6px}
 
-  /* ---------- Bar station (exp 2) ---------- */
-  @media(min-width:880px){.bar-grid{grid-template-columns:1fr minmax(260px,330px)}}
-  .palette{display:grid;gap:10px}
-  .liq{
-    appearance:none;cursor:pointer;font-family:inherit;text-align:left;color:var(--paper);
-    border:2px solid var(--line);background:var(--ink-2);border-radius:14px;padding:12px 14px;
-    display:flex;align-items:center;gap:13px;transition:.18s
-  }
-  .liq:hover{border-color:rgba(126,142,255,.5);transform:translateX(2px)}
-  .liq[aria-pressed="true"]{border-color:var(--pea);background:var(--ink-3);box-shadow:0 0 0 3px rgba(58,82,214,.18)}
-  .liq .chip{width:30px;height:30px;border-radius:9px;flex:0 0 auto;box-shadow:inset 0 0 0 1px rgba(20,30,80,.12)}
-  .liq b{font-size:.95rem;display:block}
-  .liq small{color:var(--muted);font-size:.74rem}
-  .sugarbox{background:var(--ink-2);border:1px solid var(--line);border-radius:14px;padding:14px}
-  .sugarbox .val{font-weight:700;color:var(--sugar)}
-  .weightbar{height:10px;border-radius:999px;background:var(--ink-3);overflow:hidden;margin-top:8px}
-  .weightbar i{display:block;height:100%;background:linear-gradient(90deg,#ffe29a,var(--sugar));transition:width .25s}
-  .pour{
-    appearance:none;border:1px solid rgba(255,255,255,.35);cursor:pointer;font-family:inherit;font-weight:700;font-size:1.05rem;
-    color:#fff;background:linear-gradient(160deg,#5b78f0,var(--pea) 65%);
-    padding:15px;border-radius:16px;width:100%;
-    box-shadow:0 10px 26px rgba(58,82,214,.32), inset 0 1px 0 rgba(255,255,255,.5);text-shadow:0 1px 2px rgba(0,0,0,.18);
-    transition:.16s;margin-top:4px
-  }
-  .pour:hover{transform:translateY(-2px)}
-  .pour:disabled{opacity:.45;cursor:not-allowed;transform:none}
-  .toast{
-    min-height:24px;text-align:center;font-weight:600;font-size:.92rem;margin-top:10px;
-    transition:.3s;color:var(--muted)
-  }
-  .toast.ok{color:var(--good)}.toast.mix{color:#c0560a}.toast.win{color:#c026a3}
-  .layer-legend{margin-top:14px;display:grid;gap:6px}
-  .layer-legend .row{display:flex;align-items:center;gap:9px;font-size:.82rem;color:#3c4566}
-  .layer-legend .row i{width:16px;height:16px;border-radius:5px;flex:0 0 auto}
+  /* experiment lab layout */
+  .lab{display:grid;grid-template-columns:auto 1fr;gap:30px;align-items:stretch;margin-top:22px}
+  .lab-stage{display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:rgba(8,12,36,.35);border:1px solid var(--glass-line);border-radius:18px;padding:24px 28px}
+  .stage-tag{font-family:var(--mono);font-size:11px;letter-spacing:1.5px;color:var(--ink-dim);margin-top:14px;text-align:center}
+  .controls{display:flex;flex-direction:column;gap:16px;min-width:0}
+  .step{display:flex;gap:12px;align-items:flex-start}
+  .step .n{font-family:var(--mono);font-weight:700;font-size:13px;color:#0a1030;background:linear-gradient(92deg,#9fd6ff,#c3acff);
+    min-width:26px;height:26px;border-radius:8px;display:grid;place-items:center;margin-top:2px}
+  .step .body{flex:1;min-width:0}
+  .step .body h4{font-size:14.5px;margin-bottom:8px;font-weight:700}
+  .swatches{display:flex;gap:9px;flex-wrap:wrap}
+  .swatch{width:40px;height:40px;border-radius:11px;border:2px solid rgba(255,255,255,.22);cursor:pointer;
+    position:relative;transition:.15s;box-shadow:inset 0 -4px 8px rgba(0,0,0,.25)}
+  .swatch:hover{transform:translateY(-3px) scale(1.04)}
+  .swatch.sel{border-color:#fff;box-shadow:0 0 0 3px rgba(159,224,255,.5), inset 0 -4px 8px rgba(0,0,0,.25)}
+  .swatch span{position:absolute;bottom:-19px;left:50%;transform:translateX(-50%);font-size:10.5px;color:var(--ink-soft);white-space:nowrap}
+  .swrow{margin-bottom:20px}
+  .btnrow{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .countpill{font-family:var(--mono);font-size:13px;color:var(--c-cyan);min-width:30px}
 
-  /* ---------- Quiz ---------- */
-  .quiz-head{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:8px}
-  .progress{flex:1;min-width:160px;height:12px;background:var(--ink-2);border-radius:999px;overflow:hidden;border:1px solid var(--line)}
-  .progress i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--pea),var(--base));transition:width .4s}
-  .qcount{font-weight:700;color:var(--muted);font-size:.9rem;white-space:nowrap}
-  .qcard{margin-top:8px}
-  .qtag{font-size:.74rem;font-weight:700;letter-spacing:.12em;color:var(--pea);text-transform:uppercase}
-  .qtext{font-size:1.22rem;font-weight:700;margin:8px 0 18px;line-height:1.45}
-  .opts{display:grid;gap:11px}
-  .opt{
-    appearance:none;cursor:pointer;font-family:inherit;text-align:left;font-size:1rem;color:var(--paper);
-    background:var(--ink-2);border:2px solid var(--line);border-radius:14px;padding:14px 16px;
-    display:flex;align-items:center;gap:13px;transition:.16s;font-weight:500
-  }
-  .opt:hover:not(:disabled){border-color:rgba(126,142,255,.55);transform:translateX(3px)}
-  .opt .key{
-    width:28px;height:28px;flex:0 0 auto;border-radius:8px;display:grid;place-items:center;
-    font-weight:700;font-size:.9rem;background:var(--ink-3);border:1px solid var(--line);transition:.16s
-  }
+  .readout{background:rgba(8,12,36,.4);border:1px solid var(--glass-line);border-radius:14px;padding:16px 18px;font-size:14px;color:var(--ink-soft);min-height:64px}
+  .readout b{color:var(--ink)}
+  .readout .chips{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+  .cchip{font-size:12px;padding:4px 11px;border-radius:999px;color:#0a1030;font-weight:700;display:flex;align-items:center;gap:6px}
+  .cchip i{width:9px;height:9px;border-radius:50%;display:inline-block;background:#0a1030;opacity:.55}
+
+  .tips{display:flex;gap:12px;flex-wrap:wrap;margin-top:18px}
+  .tip{flex:1;min-width:200px;background:var(--glass);border:1px solid var(--glass-line);border-radius:14px;padding:14px 16px;font-size:13px;color:var(--ink-soft)}
+  .tip b{color:var(--c-yellow);font-weight:700}
+
+  /* capillary + affinity */
+  .duo{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:22px}
+  .mini-card{background:rgba(8,12,36,.3);border:1px solid var(--glass-line);border-radius:18px;padding:22px}
+  .mini-card h4{font-size:15px;margin-bottom:6px;font-weight:700}
+  .mini-card p{font-size:13.5px;color:var(--ink-soft)}
+  .cap-paper{position:relative;width:100%;height:170px;margin:14px 0;border-radius:10px;overflow:hidden;
+    background:
+      repeating-linear-gradient(90deg,#efe9da 0 6px,#e6dfcd 6px 7px),
+      linear-gradient(180deg,#f3efe6,#e7e0d0);
+    border:1px solid rgba(0,0,0,.2)}
+  .cap-water{position:absolute;left:0;right:0;bottom:0;height:14%;
+    background:linear-gradient(180deg,rgba(120,200,255,.0),rgba(100,170,255,.45));transition:none}
+  .speck{position:absolute;width:7px;height:7px;border-radius:50%;bottom:8%;opacity:0}
+
+  .track-wrap{display:flex;gap:18px;justify-content:center;margin:14px 0 6px}
+  .track{position:relative;width:46px;height:150px;border-radius:7px;background:linear-gradient(180deg,#f3efe6,#e7e0d0);overflow:hidden;border:1px solid rgba(0,0,0,.18)}
+  .track .tline{position:absolute;left:0;right:0;bottom:18px;border-top:1.5px dashed #b9aa86}
+  .track .tdot{position:absolute;left:50%;transform:translateX(-50%) translateY(0);bottom:18px;width:18px;height:8px;border-radius:50%;transition:none}
+  .track-cap{font-size:11.5px;text-align:center;color:var(--ink-soft);margin-top:6px}
+
+  /* solvent matcher */
+  .matcher{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:22px}
+  .seg{display:flex;flex-direction:column;gap:10px}
+  .seg .lbl{font-family:var(--mono);font-size:11.5px;letter-spacing:1.5px;color:var(--ink-dim)}
+  .segbtns{display:flex;gap:8px;flex-wrap:wrap}
+  .segbtn{font-size:13.5px;font-weight:600;padding:9px 15px;border-radius:11px;cursor:pointer;
+    border:1px solid var(--glass-line);background:var(--glass);color:var(--ink-soft);transition:.15s}
+  .segbtn:hover{border-color:var(--glass-line-strong);color:var(--ink)}
+  .segbtn.on{background:linear-gradient(92deg,#7fc8ff,#b79bff);color:#0a1030;border-color:transparent;font-weight:700}
+  .matchout{grid-column:1/-1;border-radius:16px;padding:18px 20px;border:1px solid var(--glass-line);
+    background:rgba(8,12,36,.4);min-height:70px;display:flex;gap:14px;align-items:center;transition:.2s}
+  .matchout .icn{font-size:30px;line-height:1}
+  .matchout.ok{border-color:rgba(70,227,160,.5);background:rgba(40,120,90,.22)}
+  .matchout.no{border-color:rgba(255,112,138,.5);background:rgba(150,50,70,.18)}
+  .matchout .m-t{font-weight:800;font-size:16px;margin-bottom:3px}
+  .matchout .m-d{font-size:13.5px;color:var(--ink-soft)}
+
+  /* principle diagram */
+  .flow{display:flex;align-items:stretch;gap:0;flex-wrap:wrap;margin-top:22px}
+  .flow .node{flex:1;min-width:150px;background:var(--glass);border:1px solid var(--glass-line);border-radius:16px;padding:18px;text-align:center;position:relative}
+  .flow .node .big{font-size:30px;margin-bottom:8px}
+  .flow .node h4{font-size:14.5px;font-weight:700;margin-bottom:4px}
+  .flow .node p{font-size:12.5px;color:var(--ink-soft)}
+  .flow .arr{display:grid;place-items:center;color:var(--c-cyan);font-size:22px;padding:0 6px;font-family:var(--mono)}
+  .def{margin-top:22px;background:linear-gradient(120deg,rgba(120,170,255,.12),rgba(177,140,255,.1));
+    border:1px solid var(--glass-line-strong);border-radius:16px;padding:20px 22px}
+  .def .term{font-weight:800;color:var(--c-cyan);font-size:16px}
+
+  /* quiz */
+  .quiz-head{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-top:6px}
+  .score{font-family:var(--mono);font-size:14px;color:var(--ink-soft);background:var(--glass);border:1px solid var(--glass-line);
+    padding:8px 16px;border-radius:999px}
+  .score b{color:var(--c-yellow);font-size:18px}
+  .progress{height:6px;border-radius:999px;background:rgba(255,255,255,.08);margin:18px 0 6px;overflow:hidden}
+  .progress > i{display:block;height:100%;width:0;border-radius:999px;background:linear-gradient(90deg,var(--c-cyan),var(--c-violet));transition:width .4s}
+  .q{margin-top:20px;padding-top:20px;border-top:1px solid var(--glass-line)}
+  .q:first-of-type{border-top:none}
+  .q .qnum{font-family:var(--mono);font-size:12px;color:var(--c-cyan);letter-spacing:1px}
+  .q .qtext{font-size:16px;font-weight:700;margin:6px 0 14px}
+  .opts{display:flex;flex-direction:column;gap:9px}
+  .opt{display:flex;align-items:center;gap:12px;text-align:left;cursor:pointer;width:100%;
+    padding:12px 15px;border-radius:13px;border:1px solid var(--glass-line);background:var(--glass);
+    color:var(--ink);font-size:14.5px;font-family:var(--sans);transition:.14s}
+  .opt:hover:not(:disabled){border-color:var(--glass-line-strong);background:rgba(255,255,255,.1)}
+  .opt .key{font-family:var(--mono);font-size:13px;width:24px;height:24px;border-radius:7px;display:grid;place-items:center;
+    background:rgba(255,255,255,.1);color:var(--ink-soft);flex-shrink:0}
   .opt:disabled{cursor:default}
-  .opt.correct{border-color:var(--good);background:rgba(55,214,122,.14)}
-  .opt.correct .key{background:var(--good);color:#04220f}
-  .opt.wrong{border-color:var(--bad);background:rgba(255,107,129,.12)}
-  .opt.wrong .key{background:var(--bad);color:#2a0710}
-  .feedback{
-    margin-top:16px;border-radius:14px;padding:14px 16px;font-size:.94rem;display:none;
-    border-left:3px solid var(--pea);background:var(--ink-2)
+  .opt.correct{border-color:var(--good);background:rgba(70,227,160,.16)}
+  .opt.correct .key{background:var(--good);color:#072014}
+  .opt.wrong{border-color:var(--bad);background:rgba(255,112,138,.15)}
+  .opt.wrong .key{background:var(--bad);color:#2a0810}
+  .explain{margin-top:10px;font-size:13.5px;color:var(--ink-soft);background:rgba(8,12,36,.4);
+    border-left:3px solid var(--c-cyan);border-radius:0 10px 10px 0;padding:11px 14px;display:none}
+  .explain.show{display:block}
+  .explain b{color:var(--ink)}
+  .quiz-result{margin-top:24px;text-align:center;padding:26px;border-radius:18px;display:none;
+    background:linear-gradient(120deg,rgba(120,170,255,.14),rgba(177,140,255,.12));border:1px solid var(--glass-line-strong)}
+  .quiz-result.show{display:block}
+  .quiz-result .big-score{font-size:46px;font-weight:900;
+    background:linear-gradient(92deg,#9fd6ff,#c3acff);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .quiz-result .msg{font-size:16px;margin:6px 0 16px;color:var(--ink-soft)}
+
+  /* did you know */
+  .dyk-strip{position:relative;width:44px;height:130px;border-radius:6px;overflow:hidden;margin:0 auto;
+    background:linear-gradient(180deg,#f3efe6,#e7e0d0);border:1px solid rgba(0,0,0,.18)}
+  .dyk-strip .bl{position:absolute;left:0;right:0;bottom:14px;border-top:1.5px dashed #b9aa86}
+  .dyk-band{position:absolute;left:50%;transform:translateX(-50%);width:17px;height:7px;border-radius:50%;filter:blur(.8px)}
+  .case-row{display:flex;gap:16px;justify-content:center;align-items:stretch;flex-wrap:wrap;margin:16px 0 4px}
+  .suspects{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+  .evcard,.suspect{padding:10px 10px 8px;border-radius:14px;border:1px solid var(--glass-line);background:var(--glass)}
+  .evcard{border-color:rgba(255,224,102,.55);box-shadow:0 0 18px rgba(255,224,102,.12)}
+  .suspect{cursor:pointer;transition:.15s;font-family:var(--sans)}
+  .suspect:hover:not(:disabled){transform:translateY(-3px);border-color:var(--glass-line-strong)}
+  .suspect:disabled{cursor:default}
+  .suspect.hit{border-color:var(--good);background:rgba(70,227,160,.14)}
+  .suspect.miss{border-color:var(--bad);background:rgba(255,112,138,.12);opacity:.55}
+  .s-name{font-size:12px;color:var(--ink-soft);margin-top:8px;text-align:center;font-weight:700}
+  .verdict{margin-top:12px;font-size:13.5px;min-height:24px;font-weight:600}
+
+  footer{text-align:center;color:var(--ink-dim);font-size:12.5px;margin-top:40px;font-family:var(--mono);letter-spacing:1px}
+
+  @media (max-width:780px){
+    .hero{grid-template-columns:1fr}
+    .lab{grid-template-columns:1fr}
+    .duo{grid-template-columns:1fr}
+    .matcher{grid-template-columns:1fr}
+    .flow{flex-direction:column}
+    .flow .arr{transform:rotate(90deg);padding:6px 0}
+    .panel{padding:24px 20px}
+    nav{padding:10px 16px}
+    .navpills{width:100%;overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch}
   }
-  .feedback.show{display:block;animation:rise .3s ease both}
-  .feedback b{color:var(--paper)}
-  .feedback.right{border-color:var(--good)}
-  .feedback.wrongfb{border-color:var(--bad)}
-  .qnav{display:flex;justify-content:flex-end;margin-top:18px}
-  .next{
-    appearance:none;border:1px solid rgba(255,255,255,.35);cursor:pointer;font-family:inherit;font-weight:700;font-size:1rem;
-    color:#fff;background:linear-gradient(160deg,#5b78f0,var(--pea) 65%);padding:12px 26px;border-radius:14px;
-    transition:.16s;box-shadow:0 9px 22px rgba(58,82,214,.32), inset 0 1px 0 rgba(255,255,255,.5);text-shadow:0 1px 2px rgba(0,0,0,.18)
-  }
-  .next:hover{transform:translateY(-2px)}
-  .next:disabled{opacity:.4;cursor:not-allowed;transform:none}
-
-  .result{text-align:center;padding:18px 6px}
-  .result .score{font-size:4rem;font-weight:700;font-family:'Fredoka',sans-serif;line-height:1}
-  .result .score span{font-size:1.6rem;color:var(--muted)}
-  .result h3{font-size:1.5rem;margin:8px 0 6px;justify-content:center}
-  .result p{color:#414b70;max-width:46ch;margin:0 auto 18px}
-  .medal{font-size:3.4rem;margin-bottom:6px}
-  .retry{
-    appearance:none;border:1px solid var(--line);cursor:pointer;font-family:inherit;font-weight:700;
-    color:var(--paper);background:var(--ink-2);padding:13px 30px;border-radius:13px;font-size:1rem;transition:.16s
-  }
-  .retry:hover{border-color:var(--pea);transform:translateY(-2px)}
-
-  footer{border-top:1px solid var(--line);padding:26px 0 40px;color:var(--muted);font-size:.84rem;text-align:center}
-
-  /* fun facts */
-  .funfact{background:linear-gradient(160deg, rgba(255,246,228,.66), rgba(255,255,255,.5));margin-top:22px}
-  .funfact h3{font-size:1.08rem;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:8px}
-  .facts{list-style:none;display:grid;gap:11px}
-  .facts li{font-size:.92rem;color:#3c4566;line-height:1.72;padding-left:24px;position:relative}
-  .facts li::before{content:"";position:absolute;left:2px;top:9px;width:7px;height:7px;border-radius:50%;background:var(--sugar);box-shadow:0 0 8px rgba(201,135,15,.5)}
-  .facts li b{color:var(--paper)}
-  .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
-
-  @media (prefers-reduced-motion: reduce){
-    *{animation-duration:.01ms!important;transition-duration:.01ms!important}
-    .bubble{display:none!important}
+  @media (prefers-reduced-motion:reduce){
+    *{animation-duration:.001ms!important;transition-duration:.001ms!important}
+    html{scroll-behavior:auto}
   }
 </style>
 </head>
 <body>
-<header>
-  <div class="bar">
-    <div class="brand">
-      <div class="logo" aria-hidden="true"></div>
-      <div>
-        <h1>調酒師特訓</h1>
-        <small>蝶豆花 · 神奇變色實驗室</small>
+<div class="bg"></div>
+<div class="orb a"></div><div class="orb b"></div><div class="orb c"></div>
+
+<div class="topbar">
+  <div class="spectrum-line"></div>
+  <nav>
+    <div class="brand"><span class="prism"></span>色層分析</div>
+    <div class="navpills">
+      <button data-t="hero" class="active">開始</button>
+      <button data-t="think">想想看</button>
+      <button data-t="exp1">實驗一</button>
+      <button data-t="why">為什麼往上爬</button>
+      <button data-t="oilwater">油性 vs 水性</button>
+      <button data-t="principle">原理</button>
+      <button data-t="didyouknow">你知道嗎</button>
+      <button data-t="quiz">小測驗</button>
+    </div>
+  </nav>
+</div>
+
+<div class="wrap">
+
+  <!-- HERO -->
+  <section id="hero" class="hero">
+    <div>
+      <div class="eyebrow"><span class="no">自然科學實驗</span> · 四年級</div>
+      <h1>色層分析</h1>
+      <div class="sub">藏在一個顏色裡的秘密</div>
+      <p class="desc">一枝棕色筆，看起來只有一種顏色。可是把它放進水裡，竟然會跑出好幾種色料——這就是色層分析。</p>
+      <div class="cta">
+        <button class="btn primary" data-t="exp1">▶ 馬上做實驗</button>
+        <button class="btn" id="heroReplay">重播分離過程</button>
       </div>
     </div>
-    <nav role="tablist" aria-label="關卡選擇">
-      <button class="tab" role="tab" aria-selected="true"  aria-controls="v1" id="t1">🧪 實驗一 · 變色魔法</button>
-      <button class="tab" role="tab" aria-selected="false" aria-controls="v2" id="t2">🍹 練習一 · 漸層調酒</button>
-      <button class="tab" role="tab" aria-selected="false" aria-controls="vsg" id="tsg">⚖️ 比重大發現</button>
-      <button class="tab" role="tab" aria-selected="false" aria-controls="v3" id="t3">✅ 闖關測驗 · 10題</button>
-    </nav>
-  </div>
-</header>
-
-<!-- ===================== 實驗一 ===================== -->
-<section class="view active" id="v1" role="tabpanel" aria-labelledby="t1">
-  <div class="wrap">
-    <div class="hero">
-      <span class="eyebrow">實驗一 · 萃取花青素與酸鹼變色</span>
-      <h2>滴一滴，<span class="hl">藍色就會變魔術</span> 🪄</h2>
-      <p class="lead">蝶豆花泡出來的水裡藏著一種神奇色素──<b>花青素</b>。它就像會看臉色的小精靈：碰到<b>酸</b>會臉紅變紫紅，碰到<b>鹼</b>會變成清涼的藍綠。一起來當小小化學家，動手調調看！</p>
-    </div>
-
-    <div class="grid lab-grid">
-      <!-- left: vessel -->
-      <div class="card">
-        <div class="stage">
-          <div class="glow-wrap" id="glow1">
-            <svg width="190" height="250" viewBox="0 0 190 250" aria-label="裝著蝶豆花水的燒杯">
-              <defs>
-                <clipPath id="beakerClip"><path d="M48 70 L48 200 Q48 224 72 224 L118 224 Q142 224 142 200 L142 70 Z"/></clipPath>
-                <linearGradient id="liqShine" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0" stop-color="#fff" stop-opacity=".35"/>
-                  <stop offset=".25" stop-color="#fff" stop-opacity="0"/>
-                </linearGradient>
-                <filter id="soft"><feGaussianBlur stdDeviation="6"/></filter>
-              </defs>
-              <!-- glow blob behind liquid -->
-              <rect id="glowRect" x="48" y="120" width="94" height="104" clip-path="url(#beakerClip)" filter="url(#soft)" fill="#4361ee" opacity=".85"/>
-              <!-- liquid -->
-              <g clip-path="url(#beakerClip)">
-                <rect id="liquid" x="48" y="120" width="94" height="104" fill="#4361ee"/>
-                <rect id="liquidShine" x="48" y="120" width="94" height="104" fill="url(#liqShine)"/>
-                <ellipse id="surface" cx="95" cy="120" rx="47" ry="6" fill="#ffffff" opacity=".25"/>
-                <circle class="bubble" cx="74" cy="210" r="3" fill="#fff" opacity=".5"/>
-                <circle class="bubble" cx="105" cy="215" r="2.4" fill="#fff" opacity=".4"/>
-                <circle class="bubble" cx="120" cy="205" r="2" fill="#fff" opacity=".35"/>
-              </g>
-              <!-- beaker outline -->
-              <path d="M48 70 L48 200 Q48 224 72 224 L118 224 Q142 224 142 200 L142 70"
-                    fill="none" stroke="#7682b0" stroke-width="3" stroke-linecap="round" opacity=".85"/>
-              <!-- rim / spout -->
-              <path d="M44 70 L96 70 M96 70 L150 70 Q156 70 150 64 L142 70" fill="none" stroke="#7682b0" stroke-width="3" stroke-linecap="round" opacity=".85"/>
-              <!-- ticks -->
-              <g stroke="#9098bf" stroke-width="2" opacity=".55">
-                <line x1="130" y1="100" x2="142" y2="100"/>
-                <line x1="130" y1="135" x2="142" y2="135"/>
-                <line x1="130" y1="170" x2="142" y2="170"/>
-              </g>
-            </svg>
+    <div class="hero-card">
+      <div class="cap-title">DEMO ── 棕色筆的色層分析</div>
+      <div class="strip-stage">
+        <div class="beaker mini" id="heroBeaker">
+          <div class="beaker-rim"></div>
+          <div class="paper" id="heroPaper">
+            <div class="wetfront" id="heroWet"></div>
+            <div class="baseline" id="heroBase"></div>
+            <div class="dot" id="heroDot"></div>
+            <div class="bands" id="heroBands"></div>
           </div>
-        </div>
-
-        <div class="reading">
-          <div class="ph" id="phState" style="color:var(--pea);font-size:1.7rem;line-height:1.3">中性 · 蝶豆花藍</div>
-          <div class="state" id="phSub" style="color:var(--muted)">純蝶豆花水的原色</div>
-        </div>
-      </div>
-
-      <!-- right: controls + explain -->
-      <div style="display:grid;gap:22px">
-        <div class="card">
-          <h3><span class="num">①</span> 動手調調看</h3>
-          <p class="hint" style="margin-bottom:14px">點按下面的按鈕，加入檸檬汁或小蘇打水，看看燒杯裡的蝶豆花水會變成什麼顏色！</p>
-          <div class="controls">
-            <button class="drop-btn btn-acid" id="addAcid">
-              <span class="ico">🍋</span>
-              <span>加檸檬汁（酸）<small>看看會變什麼顏色</small></span>
-            </button>
-            <button class="drop-btn btn-base" id="addBase">
-              <span class="ico">🧂</span>
-              <span>加小蘇打水（鹼）<small>看看會變什麼顏色</small></span>
-            </button>
-            <button class="drop-btn btn-reset" id="resetMix">↺ 倒掉重來（回到純蝶豆花水）</button>
-          </div>
-        </div>
-
-        <div class="card">
-          <h3><span class="num">②</span> 為什麼會這樣？</h3>
-          <div class="explain" id="explainBox">
-            <b>純蝶豆花水是藍色的。</b> 在中性的水裡，花青素呈現漂亮的藍色。試著加檸檬汁或小蘇打水，看看會變什麼顏色！
-          </div>
-          <div class="swatches">
-            <div class="sw"><div class="dot" style="background:var(--acid);color:var(--acid)"></div><b>酸性</b><span>檸檬汁 → 紫紅色</span></div>
-            <div class="sw"><div class="dot" style="background:var(--pea);color:var(--pea)"></div><b>中性</b><span>清水 → 藍色</span></div>
-            <div class="sw"><div class="dot" style="background:var(--base);color:var(--base)"></div><b>鹼性</b><span>小蘇打 → 藍綠色</span></div>
-          </div>
-        </div>
-
-        <div class="card">
-          <h3><span class="num">③</span> 真的動手做（做做看）</h3>
-          <ol class="steps">
-            <li>取約 15 朵乾燥蝶豆花，加入約 300cc 熱水，浸泡約 5 分鐘。</li>
-            <li>把濃蝶豆花水加入裝冰水的杯子裡，稀釋並降溫備用。</li>
-            <li>一杯加入小蘇打水 → 觀察顏色變化（變藍綠）。</li>
-            <li>另一杯加入稀釋檸檬汁 → 觀察顏色變化（變紫紅）。</li>
-          </ol>
-          <div class="gear">
-            <span>蝶豆花</span><span>檸檬汁</span><span>食用小蘇打</span><span>玻璃熱水壺</span><span>透明塑膠杯</span><span>小藥匙</span><span>筷子</span>
-          </div>
+          <div class="water"></div>
         </div>
       </div>
     </div>
+  </section>
 
-    <div class="card funfact">
-      <h3>💡 冷知識</h3>
-      <ul class="facts">
-        <li>「花青素」這個名字直接翻就是「<b>花的藍色</b>」（希臘文 anthos＝花 ＋ kyanos＝藍）。</li>
-        <li><b>繡球花</b>會看土壤的酸鹼變色：酸性土開藍花、鹼性土開粉紅花，和蝶豆花碰酸鹼變色是同一個道理。</li>
-        <li>蝶豆花其實是<b>豆科</b>植物（跟豌豆、四季豆同一家），在泰國、馬來西亞還常拿來<b>染藍色的飯和飲料</b>。</li>
-      </ul>
+  <!-- THINK -->
+  <section id="think" class="panel">
+    <div class="eyebrow"><span class="no">01</span> 想想看</div>
+    <h2 class="sec">這兩枝筆，真的一樣嗎？</h2>
+    <p class="lead">兩枝不同廠牌的棕色筆，畫在紙上看起來幾乎一模一樣。但它們是用「相同的色料」做出來的嗎？有沒有方法，可以把組成它們的色料分開來看看？</p>
+
+    <div class="duo" style="margin-top:20px">
+      <div class="mini-card" style="text-align:center">
+        <h4>棕色筆 Ａ 與 棕色筆 Ｂ</h4>
+        <p style="margin-bottom:14px">先用眼睛猜猜看，再按按鈕揭曉。</p>
+        <div style="display:flex;gap:26px;justify-content:center;margin:8px 0 16px">
+          <div><div style="width:70px;height:70px;border-radius:16px;background:#6b4a2b;box-shadow:inset 0 -6px 12px rgba(0,0,0,.3)"></div><div style="font-size:12px;color:var(--ink-soft);margin-top:8px">Ａ 廠牌</div></div>
+          <div><div style="width:70px;height:70px;border-radius:16px;background:#5a4632;box-shadow:inset 0 -6px 12px rgba(0,0,0,.3)"></div><div style="font-size:12px;color:var(--ink-soft);margin-top:8px">Ｂ 廠牌</div></div>
+        </div>
+        <button class="btn primary" id="thinkBtn">它們一樣嗎？</button>
+        <p id="thinkAns" style="margin-top:14px;color:var(--c-yellow);font-weight:600;min-height:24px"></p>
+      </div>
+      <div class="mini-card">
+        <h4>科學家的小工具：色層分析</h4>
+        <p>把一滴顏色「攤開來」，就能看出裡面到底混了哪些色料。這個方法在生活裡很有用——</p>
+        <ul style="margin:12px 0 0 18px;font-size:13.5px;color:var(--ink-soft);line-height:1.9">
+          <li>檢查食物或飲料裡加了哪些色素</li>
+          <li>分辨墨水、顏料的成分</li>
+          <li>偵探辦案時比對不同的筆跡墨水</li>
+        </ul>
+      </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<!-- ===================== 練習一 ===================== -->
-<section class="view" id="v2" role="tabpanel" aria-labelledby="t2">
-  <div class="wrap">
-    <div class="hero">
-      <span class="eyebrow">練習一 · 調理大師登場</span>
-      <h2>誰重誰先下，<span class="hl">疊出漸層彩虹飲</span> 🌈</h2>
-      <p class="lead">為什麼飲料可以一層一層不混在一起？秘密有兩個:<b>重量(比重)</b>和<b>冰塊</b>!糖越多水越<b>重</b>,要先倒在最下面;再<b>加冰塊</b>,把輕的飲料<b>沿著冰塊輕輕倒</b>才不會沖混。最神奇的是:最後倒入的藍色<b>蝶豆花水</b>碰到下層酸酸的檸檬水,<b>交界會變出紫紅色</b>——漸層就完成了!</p>
-    </div>
+  <!-- EXPERIMENT 1 -->
+  <section id="exp1" class="panel">
+    <div class="eyebrow"><span class="no">02</span> 實驗一</div>
+    <h2 class="sec">棕色筆的色層分析</h2>
+    <p class="lead">照著步驟操作：選一枝筆 → 在基準線上點色料 → 加水。仔細看色料怎麼被水帶上去、又分成哪些顏色。</p>
 
-    <div class="grid bar-grid">
-      <!-- left: glass -->
-      <div class="card">
-        <div class="stage">
-          <div class="glow-wrap" id="glow2">
-            <svg width="170" height="290" viewBox="0 0 170 290" aria-label="調製漸層飲料的高腳杯">
-              <defs>
-                <clipPath id="glassClip"><path d="M52 36 L60 256 Q60 262 66 262 L104 262 Q110 262 110 256 L118 36 Z"/></clipPath>
-                <linearGradient id="glassShine" x1="0" y1="0" x2="1" y2="0">
-                  <stop offset="0" stop-color="#fff" stop-opacity=".22"/>
-                  <stop offset=".2" stop-color="#fff" stop-opacity="0"/>
-                  <stop offset=".8" stop-color="#fff" stop-opacity="0"/>
-                  <stop offset="1" stop-color="#fff" stop-opacity=".10"/>
-                </linearGradient>
-              </defs>
-              <defs id="dynGrads"></defs>
-              <g clip-path="url(#glassClip)">
-                <g id="layers"></g>
-                <rect x="52" y="36" width="66" height="226" fill="url(#glassShine)"/>
-                <g id="iceG"></g>
-              </g>
-              <path d="M52 36 L60 256 Q60 262 66 262 L104 262 Q110 262 110 256 L118 36"
-                    fill="none" stroke="#7682b0" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity=".85"/>
-              <line x1="52" y1="36" x2="118" y2="36" stroke="#7682b0" stroke-width="3" stroke-linecap="round" opacity=".85"/>
-            </svg>
+    <div class="lab">
+      <div class="lab-stage">
+        <div class="strip-stage">
+          <div class="beaker" id="expBeaker">
+            <div class="beaker-rim"></div>
+            <div class="paper" id="expPaper">
+              <div class="wetfront" id="expWet"></div>
+              <div class="baseline" id="expBase"></div>
+              <div class="dot" id="expDot"></div>
+              <div class="bands" id="expBands"></div>
+            </div>
+            <div class="water"></div>
           </div>
         </div>
-        <div class="toast" id="barToast">選一種飲料，按「倒入杯中」開始調製，挑戰看看能不能疊出漸層飲料 ✨</div>
-        <div class="layer-legend" id="legend"></div>
+        <div class="stage-tag" id="stageTag">← 先在右邊選一枝筆</div>
       </div>
 
-      <!-- right: mixing controls -->
-      <div style="display:grid;gap:18px">
-        <div class="card">
-          <h3><span class="num">①</span> 選一種飲料</h3>
-          <div class="palette" id="palette">
-            <button class="liq" data-liq="sugar"  aria-pressed="false"><span class="chip" style="background:#ffd479;color:#ffd479"></span><span><b>糖水</b><small>金黃 · 最甜最重，先倒當底（建議 5 顆方糖）</small></span></button>
-            <button class="liq" data-liq="lemon"  aria-pressed="false"><span class="chip" style="background:#f2e296;color:#f2e296"></span><span><b>檸檬水</b><small>淡黃 · 酸性（建議 3 顆方糖）</small></span></button>
-            <button class="liq" data-liq="soda"   aria-pressed="false"><span class="chip" style="background:#d6e4f2;color:#d6e4f2"></span><span><b>小蘇打水</b><small>近透明 · 鹼性（建議 3 顆方糖）</small></span></button>
-            <button class="liq" data-liq="pea"    aria-pressed="false"><span class="chip" style="background:#4361ee;color:#4361ee"></span><span><b>蝶豆花水</b><small>湛藍 · 最輕，1 顆方糖或不加，最後倒最上層</small></span></button>
+      <div class="controls">
+        <div class="step">
+          <div class="n">1</div>
+          <div class="body swrow">
+            <h4>選一枝色筆（在濾紙上點色料）</h4>
+            <div class="swatches" id="penSwatches"></div>
           </div>
         </div>
-
-        <div class="card">
-          <h3><span class="num">②</span> 加多少糖？決定重量</h3>
-          <div class="sugarbox">
-            <label style="font-size:.86rem;color:var(--muted);font-weight:600;display:flex;justify-content:space-between">
-              <span>方糖顆數</span><span class="val"><span id="sugarVal">3</span> 顆</span>
-            </label>
-            <input type="range" id="sugarRange" min="0" max="6" step="1" value="3" style="accent-color:var(--sugar)">
-            <div class="weightbar"><i id="weightFill" style="width:50%"></i></div>
-            <p class="hint" style="margin-top:8px;font-size:.82rem">糖越多 → 越重 → 要越早倒、放越下層。</p>
+        <div class="step">
+          <div class="n">2</div>
+          <div class="body">
+            <h4>點上色料（筆停留 2～3 秒）</h4>
+            <div class="btnrow">
+              <button class="btn" id="dotBtn" disabled>點上色料</button>
+              <span class="countpill" id="dotCount"></span>
+            </div>
           </div>
-          <button class="drop-btn btn-ice" id="iceBtn" aria-pressed="false" style="margin-top:4px">
-            <span class="ico">🧊</span>
-            <span id="iceLabel">加冰塊到杯中<small>沿著冰塊輕輕倒，才不會混在一起</small></span>
-          </button>
-          <button class="pour" id="pourBtn" disabled>🫗 倒入杯中</button>
-          <button class="drop-btn btn-reset" id="resetGlass" style="margin-top:10px">↺ 清空杯子重新調製</button>
         </div>
-
-        <div class="card">
-          <h3><span class="num">③</span> 真的動手做（調製步驟）</h3>
-          <ol class="steps">
-            <li><span>先加入<b>糖水</b>（5 顆方糖）當底。</span></li>
-            <li><span>再加入<b>冰塊</b>到杯口（約九分滿）。</span></li>
-            <li><span>緩緩將<b>檸檬水或小蘇打水</b>（3 顆方糖）沿著冰塊倒入。</span></li>
-            <li><span>最後緩緩倒入<b>蝶豆花水（1 顆方糖，或不加）</b>，看交界變色，完成！</span></li>
-          </ol>
+        <div class="step">
+          <div class="n">3</div>
+          <div class="body">
+            <h4>加水，開始分析</h4>
+            <div class="btnrow">
+              <button class="btn primary" id="runBtn" disabled>加水，開始分析</button>
+              <button class="btn" id="resetBtn">再做一次</button>
+            </div>
+          </div>
         </div>
+        <div class="readout" id="expReadout">選好筆、點上色料、加水，結果會顯示在這裡。</div>
       </div>
     </div>
 
-    <div class="card funfact">
-      <h3>💡 冷知識</h3>
-      <ul class="facts">
-        <li>調酒師做漸層飲料，用的就是課堂上「<b>重的在下、輕的在上</b>」這個密度原理。</li>
-        <li>冰塊會浮在水上，是因為「<b>冰比水輕</b>」（密度比較小）——這在自然界很特別！也因為這樣，<b>湖面是從上面開始結冰</b>，底下的魚才能活過冬天。</li>
-      </ul>
+    <div class="tips">
+      <div class="tip"><b>為什麼基準線要用鉛筆？</b><br>鉛筆是碳，不會溶在水裡，所以不會被水帶走。如果用色筆畫線，那條線自己也會被「分析」掉！</div>
+      <div class="tip"><b>色點要在水面上方</b><br>如果色點泡在水裡，色料會直接溶到水中，就看不到爬升分離的過程了。</div>
     </div>
-  </div>
-</section>
+  </section>
 
-<!-- ===================== 比重大發現 ===================== -->
-<section class="view" id="vsg" role="tabpanel" aria-labelledby="tsg">
-  <div class="wrap">
-    <div class="hero">
-      <span class="eyebrow">比重 · 跟水比一比</span>
-      <h2>這一杯，<span class="hl">是水的幾倍重？</span> ⚖️</h2>
-      <p class="lead">「比重」就是<b>同樣多的一杯液體，是水的幾倍重</b>。把水當基準，水的比重剛好是 <b>1</b>。比水重（比重大於 1）就會沉到下面——這正是漸層飲料下層的祕密！把方糖加進右邊那杯，看看比重會怎麼變。</p>
-    </div>
+  <!-- WHY -->
+  <section id="why" class="panel">
+    <div class="eyebrow"><span class="no">03</span> 說說看</div>
+    <h2 class="sec">色料為什麼會自己往上爬？</h2>
+    <p class="lead">水不是被吸管吸上去的，是濾紙自己把水「爬」上去的。這個現象叫做毛細現象。</p>
 
-    <div class="grid lab-grid">
-      <!-- left: balance -->
-      <div class="card">
-        <div class="stage" style="min-height:330px">
-          <div class="glow-wrap" id="glowSg">
-            <svg width="330" height="290" viewBox="0 0 330 290" aria-label="比較水和糖水輕重的天平">
-              <!-- stand -->
-              <rect x="158" y="74" width="14" height="170" rx="4" fill="#9aa6cf" opacity=".55"/>
-              <rect x="120" y="244" width="90" height="12" rx="6" fill="#8b95c4" opacity=".7"/>
-              <circle cx="165" cy="74" r="9" fill="#7682b0"/>
-              <!-- beam (rotates) -->
-              <g id="beam" transform="rotate(0 165 74)">
-                <rect x="45" y="70" width="240" height="9" rx="4.5" fill="#7682b0"/>
-                <!-- left hanger + pan (water) -->
-                <line x1="70" y1="79" x2="70" y2="116" stroke="#9aa6cf" stroke-width="2.5"/>
-                <path d="M44 116 H96 L88 150 Q88 156 82 156 H58 Q52 156 52 150 Z" fill="rgba(120,160,255,.30)" stroke="#6f8ad0" stroke-width="2"/>
-                <ellipse cx="70" cy="116" rx="26" ry="6" fill="#4361ee" opacity=".55"/>
-                <text x="70" y="138" text-anchor="middle" font-family="'Noto Sans TC',sans-serif" font-size="14" font-weight="700" fill="#27408b">水</text>
-                <!-- right hanger + pan (sugar water) -->
-                <line x1="260" y1="79" x2="260" y2="116" stroke="#9aa6cf" stroke-width="2.5"/>
-                <path d="M234 116 H286 L278 150 Q278 156 272 156 H248 Q242 156 242 150 Z" id="sgCup" fill="rgba(255,212,121,.30)" stroke="#c9870f" stroke-width="2"/>
-                <ellipse id="sgSurface" cx="260" cy="116" rx="26" ry="6" fill="#ffd479" opacity=".7"/>
-                <text x="260" y="138" text-anchor="middle" font-family="'Noto Sans TC',sans-serif" font-size="13" font-weight="700" fill="#8a5a00">糖水</text>
-              </g>
-            </svg>
-          </div>
+    <div class="duo">
+      <div class="mini-card">
+        <h4>毛細現象：水會沿著縫隙往上爬</h4>
+        <div class="cap-paper" id="capPaper">
+          <div class="cap-water" id="capWater"></div>
         </div>
-        <div class="reading">
-          <div class="ph" id="sgNum" style="color:var(--pea);font-size:2.4rem">比重 1.00</div>
-          <div class="state" id="sgSub" style="color:var(--muted)">這杯是水的 1.00 倍重</div>
-        </div>
+        <div class="btnrow"><button class="btn primary" id="capBtn">看水往上爬</button></div>
+        <p style="margin-top:12px">濾紙裡有很多細小的縫隙。水會沿著這些縫隙慢慢往上升，順便把溶在水裡的色料一起帶上去。</p>
       </div>
 
-      <!-- right: controls + explain -->
-      <div style="display:grid;gap:22px">
-        <div class="card">
-          <h3><span class="num">①</span> 在右邊那杯加方糖</h3>
-          <p class="hint" style="margin-bottom:14px">兩杯一樣多，左邊永遠是純水。加方糖讓右邊變重，看天平怎麼倒、比重怎麼變。</p>
-          <div class="sugarbox">
-            <label style="font-size:.86rem;color:var(--muted);font-weight:600;display:flex;justify-content:space-between">
-              <span>方糖顆數</span><span class="val"><span id="sgSugarVal">0</span> 顆方糖</span>
-            </label>
-            <input type="range" id="sgRange" min="0" max="6" step="1" value="0" style="accent-color:var(--sugar)">
-            <p class="hint" style="margin-top:8px;font-size:.82rem">糖越多 → 越重 → 比重越大。</p>
+      <div class="mini-card">
+        <h4>為什麼有的爬高、有的爬低？</h4>
+        <div class="track-wrap">
+          <div>
+            <div class="track"><div class="tline"></div><div class="tdot" id="dotHigh" style="background:#ffe066"></div></div>
+            <div class="track-cap">附著力<b>小</b><br>爬得高</div>
           </div>
-          <button class="drop-btn btn-reset" id="sgReset" style="margin-top:12px">↺ 回到純水（比重 1.00）</button>
-        </div>
-
-        <div class="card">
-          <h3><span class="num">②</span> 比重是什麼意思？</h3>
-          <div class="explain" id="sgExplain">
-            <b>現在右邊是純水。</b>兩杯一樣重，天平平平的。水的比重就是 <b>1.00</b>，是大家比較的基準。加點方糖試試看！
+          <div>
+            <div class="track"><div class="tline"></div><div class="tdot" id="dotLow" style="background:#5cd6ff"></div></div>
+            <div class="track-cap">附著力<b>大</b><br>爬得低</div>
           </div>
         </div>
+        <div class="btnrow"><button class="btn primary" id="affBtn">比一比</button></div>
+        <p style="margin-top:12px">色料黏紙黏得緊（附著力大），就被卡住、爬得低；黏得鬆（附著力小），就容易被水帶著跑、爬得高。一個顏色裡的不同色料，附著力不一樣，所以會被分開！</p>
+      </div>
+    </div>
+  </section>
 
-        <div class="card">
-          <h3><span class="num">③</span> 跟漸層飲料的關係</h3>
-          <p class="hint" style="font-size:.9rem;line-height:1.7">比重越大 → 越重 → 在漸層飲料裡待在<b>越下層</b>。沒加糖的蝶豆花水最接近水（比重最接近 1）、最輕，所以浮在<b>最上層</b>。科學家用「<b>比重計</b>」就能直接量出液體的比重——你們之後也會自己做一個喔！</p>
+  <!-- OIL vs WATER -->
+  <section id="oilwater" class="panel">
+    <div class="eyebrow"><span class="no">04</span> 進階探究</div>
+    <h2 class="sec">油性筆 vs 水性筆</h2>
+    <p class="lead">所有的筆都能用「水」分離嗎？試試看不同的筆配上不同的溶劑，會發生什麼事。</p>
+
+    <div class="matcher">
+      <div class="seg">
+        <span class="lbl">選一種筆</span>
+        <div class="segbtns" id="penType">
+          <button class="segbtn on" data-pen="water">水性筆（一般彩色筆）</button>
+          <button class="segbtn" data-pen="oil">油性筆（奇異筆）</button>
         </div>
       </div>
-    </div>
-
-    <div class="card funfact">
-      <h3>💡 冷知識</h3>
-      <ul class="facts">
-        <li><b>死海</b>的水又鹹又重（比重約 1.24），人躺上去會自動浮起來、想沉都沉不下去——比重越大，浮力越強。</li>
-        <li>「<b>比重計</b>」生活中真的會用到：量釀酒的糖度、檢查汽車電瓶的電解液、測牛奶濃度——正好預告五年級的「自製比重計」單元。</li>
-      </ul>
-    </div>
-  </div>
-</section>
-
-<!-- ===================== 測驗 ===================== -->
-<section class="view" id="v3" role="tabpanel" aria-labelledby="t3">
-  <div class="wrap">
-    <div class="hero">
-      <span class="eyebrow">闖關測驗 · 共 10 題</span>
-      <h2>你是<span class="hl">調酒師大師</span>嗎？來闖關！</h2>
-      <p class="lead">回想剛剛玩過的兩個實驗，選出正確答案。答錯也沒關係，會告訴你為什麼喔！</p>
-    </div>
-
-    <div class="card qcard" id="quizArea">
-      <div class="quiz-head">
-        <div class="progress"><i id="qProg"></i></div>
-        <div class="qcount" id="qCount">第 1 / 10 題</div>
+      <div class="seg">
+        <span class="lbl">選一種溶劑</span>
+        <div class="segbtns" id="solvType">
+          <button class="segbtn on" data-solv="water">水</button>
+          <button class="segbtn" data-solv="gas">汽油</button>
+          <button class="segbtn" data-solv="acetone">丙酮</button>
+        </div>
       </div>
-      <div id="qBody"></div>
+      <div class="matchout" id="matchOut">
+        <div class="icn">🧪</div>
+        <div><div class="m-t">選好筆和溶劑後…</div><div class="m-d">下面會告訴你能不能成功把色料分離。</div></div>
+      </div>
     </div>
-  </div>
-</section>
+    <p style="margin-top:16px;font-size:13px;color:var(--ink-dim)">提醒：汽油、丙酮是有機溶劑，有味道也易燃，課堂上由老師示範操作。</p>
+  </section>
 
-<footer>
-  自然科學實驗 · 調酒師特訓　|　核心概念：花青素酸鹼指示劑 × 溶液比重與漸層
-</footer>
+  <!-- PRINCIPLE -->
+  <section id="principle" class="panel">
+    <div class="eyebrow"><span class="no">05</span> 原理</div>
+    <h2 class="sec">色層分析法是怎麼運作的</h2>
+    <p class="lead">把整個過程拆開來看，其實只有三個關鍵角色互相配合。</p>
+
+    <div class="flow">
+      <div class="node"><div class="big">🎨</div><h4>混合的色料</h4><p>一個顏色，其實是好幾種色料混在一起。</p></div>
+      <div class="arr">→</div>
+      <div class="node"><div class="big">💧</div><h4>溶劑帶著跑</h4><p>水（或汽油）沿著濾紙的毛細現象往上爬，把色料一起帶上去。</p></div>
+      <div class="arr">→</div>
+      <div class="node"><div class="big">🌈</div><h4>分離成色譜</h4><p>附著力不同，每種色料停在不同高度，就分開了。</p></div>
+    </div>
+
+    <div class="def">
+      <span class="term">色層分析法</span>　用溶劑（如水、汽油），利用毛細現象，把混在一起的不同色料分離開來的方法。
+    </div>
+  </section>
+
+  <!-- DID YOU KNOW -->
+  <section id="didyouknow" class="panel">
+    <div class="eyebrow"><span class="no">06</span> 你知道嗎？</div>
+    <h2 class="sec">色層分析的兩個小秘密</h2>
+    <p class="lead">學會原理之後，再看兩件有趣的事：最「不單純」的顏色，還有色層分析怎麼幫忙抓壞人。</p>
+
+    <div class="duo">
+      <div class="mini-card">
+        <h4>🖤 最不單純的顏色：黑色</h4>
+        <p>猜猜看：一枝黑色水性筆裡，可能藏了幾種色料？</p>
+        <div class="segbtns" id="blackGuess" style="margin:14px 0 12px">
+          <button class="segbtn" data-g="1">只有 1 種</button>
+          <button class="segbtn" data-g="2">2 種</button>
+          <button class="segbtn" data-g="4">4 種以上</button>
+        </div>
+        <p id="blackAns" style="min-height:54px;font-size:13.5px;color:var(--ink-soft)"></p>
+        <button class="btn" data-t="exp1" style="margin-top:10px">回實驗一選「黑色筆」試試 →</button>
+      </div>
+
+      <div class="mini-card">
+        <h4>🕵️ 色層分析會抓壞人</h4>
+        <p>有人偽造了一張單據！鑑識人員把單據上的墨水做了色層分析（金框＝證物色譜），三位嫌疑人的黑筆也分別做了分析。點點看，單據是哪一枝筆寫的？</p>
+        <div class="case-row">
+          <div class="evcard"><div class="dyk-strip" id="evidStrip"></div><div class="s-name" style="color:var(--c-yellow)">證物</div></div>
+          <div class="suspects" id="suspects"></div>
+        </div>
+        <div class="verdict" id="verdict"></div>
+        <div class="btnrow"><button class="btn" id="newCase">重新出題</button></div>
+        <p style="margin-top:12px;font-size:13px;color:var(--ink-dim)">每個廠牌墨水的色料配方不同，色譜就像墨水的「指紋」。鑑識科學真的會用色層分析比對文件上的墨水，偵辦偽造、竄改案件。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- QUIZ -->
+  <section id="quiz" class="panel">
+    <div class="eyebrow"><span class="no">07</span> 小測驗</div>
+    <div class="quiz-head">
+      <div><h2 class="sec" style="margin:6px 0 0">10 題挑戰</h2></div>
+      <div class="score">答對 <b id="scoreNum">0</b> / 10</div>
+    </div>
+    <div class="progress"><i id="qProgress"></i></div>
+    <div id="quizBox"></div>
+    <div class="quiz-result" id="quizResult">
+      <div class="big-score" id="bigScore">0 / 10</div>
+      <div class="msg" id="resultMsg"></div>
+      <button class="btn primary" id="retryBtn">再測一次</button>
+    </div>
+  </section>
+
+  <footer>自然科學實驗 ・ 色層分析互動教材</footer>
+</div>
 
 <script>
-(function(){
-  "use strict";
-  var $ = function(s,el){return (el||document).querySelector(s);};
-  var $$ = function(s,el){return Array.prototype.slice.call((el||document).querySelectorAll(s));};
+/* ============ 色料資料（c 色／rf 爬升高度 0~1／k 濃度 0~1／n 名稱） ============ */
+const PENS = {
+  brownA:{label:'棕色筆 Ａ', dot:'#6b4a2b', bands:[
+    {c:'#ffd94a', rf:0.92, k:1.00, n:'黃'},
+    {c:'#ff6b6b', rf:0.60, k:0.78, n:'紅'},
+    {c:'#4aa3ff', rf:0.30, k:0.42, n:'藍'} ]},
+  brownB:{label:'棕色筆 Ｂ', dot:'#5a4632', bands:[
+    {c:'#ffa64a', rf:0.86, k:0.92, n:'橙'},
+    {c:'#ff5e8a', rf:0.54, k:0.85, n:'洋紅'},
+    {c:'#9b6bff', rf:0.26, k:0.50, n:'紫'} ]},
+  black:{label:'黑色筆', dot:'#262626', bands:[
+    {c:'#ffe066', rf:0.94, k:0.80, n:'黃'},
+    {c:'#5ce6a8', rf:0.70, k:0.62, n:'綠'},
+    {c:'#5cd6ff', rf:0.46, k:0.95, n:'青'},
+    {c:'#ff6b9d', rf:0.22, k:1.00, n:'洋紅'} ]},
+  green:{label:'綠色筆', dot:'#1f8a4c', bands:[
+    {c:'#ffe066', rf:0.84, k:0.85, n:'黃'},
+    {c:'#5cd6ff', rf:0.38, k:1.00, n:'藍'} ]},
+  purple:{label:'紫色筆', dot:'#6b3fa0', bands:[
+    {c:'#ff6b9d', rf:0.80, k:0.90, n:'洋紅'},
+    {c:'#5cb5ff', rf:0.34, k:1.00, n:'藍'} ]},
+};
 
-  /* ---------------- Tabs ---------------- */
-  var tabs = $$('.tab'), views = {v1:$('#v1'),v2:$('#v2'),vsg:$('#vsg'),v3:$('#v3')};
-  function selectTab(tab){
-    tabs.forEach(function(t){t.setAttribute('aria-selected', t===tab ? 'true':'false');});
-    Object.keys(views).forEach(function(k){
-      var on = (tab.getAttribute('aria-controls')===k);
-      views[k].classList.toggle('active', on);
+const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ============ 通用：在某個 paper 上跑色層分析動畫 ============ */
+function setupStrip(paperEl){
+  const h = paperEl.clientHeight;
+  const baseFromBottom = Math.round(h*0.20);   // 基準線高度
+  const frontMax = Math.round(h*0.90);          // 溶劑前緣最高
+  const range = frontMax - baseFromBottom;
+  const base = paperEl.querySelector('.baseline');
+  const dot  = paperEl.querySelector('.dot');
+  if(base) base.style.bottom = baseFromBottom+'px';
+  if(dot)  dot.style.bottom  = (baseFromBottom-4)+'px';
+  return {h, baseFromBottom, frontMax, range};
+}
+
+function runStrip(paperEl, pen, opts){
+  opts = opts || {};
+  const geo = setupStrip(paperEl);
+  const wet = paperEl.querySelector('.wetfront');
+  const dot = paperEl.querySelector('.dot');
+  const bandsBox = paperEl.querySelector('.bands');
+  bandsBox.innerHTML = '';
+  dot.style.background = pen.dot;
+  dot.style.opacity = '1';
+
+  // 建立色帶（噴射拖尾，尾端固定在基準線；寬度隨濃度 k 變化）
+  const isMini = paperEl.closest('.beaker') && paperEl.closest('.beaker').classList.contains('mini');
+  const baseW = isMini ? 14 : 18;
+  const bandEls = pen.bands.map(b=>{
+    const el = document.createElement('div');
+    el.className = 'band';
+    el.style.setProperty('--bandc', b.c);
+    const k = (b.k==null?1:b.k);
+    el.style.width = (baseW * (0.62 + 0.38*k)) + 'px';   // 濃→較粗，淡→較細
+    el.style.bottom = (geo.baseFromBottom-2)+'px';
+    el.innerHTML = '<div class="head"></div>';
+    bandsBox.appendChild(el);
+    return el;
+  });
+
+  // 依附著力排定「噴射順序」：爬最高的先衝出去，最有層次
+  const order = pen.bands.map((b,i)=>i).sort((a,b)=>pen.bands[b].rf - pen.bands[a].rf);
+  const stagger = 0.14; // 每個色料噴出的時間錯開
+
+  const dur = opts.dur || 4600;
+  const easeJet = t => t<0 ? 0 : 1 - Math.pow(1-t, 3); // 起步快、尾段緩，像噴出後減速
+  const place = (p)=>{
+    if(wet) wet.style.height = (geo.baseFromBottom + p*geo.range)+'px';
+    dot.style.opacity = String(Math.max(0.1, 1 - p*2.6));
+    pen.bands.forEach((b,i)=>{
+      const slot = order.indexOf(i);
+      const start = slot * stagger;
+      // 各色料的個別進度（錯開噴出）
+      let lp = (p - start) / (1 - start);
+      if(lp < 0) lp = 0; if(lp > 1) lp = 1;
+      const e = easeJet(lp);
+      const headY = e * b.rf * geo.range;     // 頭部高度
+      const tailLen = headY * (1 - e*0.62);   // 噴出時尾巴長，停下後尾巴收短、凝聚成色帶
+      bandEls[i].style.height = Math.max(0, tailLen) + 'px';
+      bandEls[i].style.transform = 'translateX(-50%) translateY(-' + (headY - tailLen) + 'px)';
+      const k = (b.k==null?1:b.k);
+      const targetOp = 0.4 + 0.6*k;                       // 濃→不透明，淡→較透
+      bandEls[i].style.opacity = String(Math.min(targetOp, lp*4*targetOp));
     });
-    window.scrollTo({top:0,behavior:'smooth'});
-  }
-  tabs.forEach(function(t){t.addEventListener('click',function(){selectTab(t);});});
-
-  /* ================= 實驗一：加檸檬／加小蘇打 變色 ================= */
-  // 只呈現三種狀態的顏色：中性（藍）、加酸（紫紅）、加鹼（藍綠）
-  var rgb = function(c){return 'rgb('+c[0]+','+c[1]+','+c[2]+')';};
-  var ECOLORS={
-    neutral:[67,97,238],   // 蝶豆花藍
-    acid:[210,50,110],     // 紫紅
-    base:[22,185,150]      // 藍綠
   };
-  var ESTATE={
-    neutral:{label:'中性 · 蝶豆花藍', sub:'純蝶豆花水的原色', cls:'--pea',
-      why:'<b>純蝶豆花水是藍色的。</b>在中性的水裡，花青素呈現漂亮的<b>藍色</b>。加檸檬汁或小蘇打水，看看會變成什麼顏色！'},
-    acid:{label:'酸性 · 紫紅色', sub:'加了檸檬汁（酸）', cls:'--acid',
-      why:'<b>加了檸檬汁（酸性）！</b>花青素遇到<b>酸</b>會改變形狀，顏色變成<b>紫紅色</b>。'},
-    base:{label:'鹼性 · 藍綠色', sub:'加了小蘇打（鹼）', cls:'--base',
-      why:'<b>加了小蘇打（鹼性）！</b>花青素遇到<b>鹼</b>會改變形狀，顏色變成<b>藍綠色</b>。'}
-  };
 
-  var liquid=$('#liquid'), glowRect=$('#glowRect'),
-      phState=$('#phState'), phSub=$('#phSub'),
-      explainBox=$('#explainBox'), glow1=$('#glow1');
+  if(REDUCED){ place(1); opts.onDone && opts.onDone(); return; }
 
-  function setState(key){
-    var c=ECOLORS[key], col=rgb(c), info=ESTATE[key];
-    var cssCol=getComputedStyle(document.documentElement).getPropertyValue(info.cls).trim();
-    liquid.setAttribute('fill',col);
-    glowRect.setAttribute('fill',col);
-    phState.textContent=info.label; phState.style.color=cssCol;
-    phSub.textContent=info.sub;
-    explainBox.style.borderColor=cssCol;
-    explainBox.innerHTML=info.why;
-    glow1.style.filter='drop-shadow(0 0 26px '+col+'88)';
+  const t0 = performance.now();
+  function frame(now){
+    let p = (now - t0)/dur;
+    if(p>1) p=1;
+    place(p);  // 緩動已在各色料內部處理
+    if(p<1) requestAnimationFrame(frame);
+    else opts.onDone && opts.onDone();
   }
+  requestAnimationFrame(frame);
+}
 
-  $('#addAcid').addEventListener('click',function(){setState('acid');});
-  $('#addBase').addEventListener('click',function(){setState('base');});
-  $('#resetMix').addEventListener('click',function(){setState('neutral');});
-  setState('neutral');
+function resetStrip(paperEl, dotColor){
+  const geo = setupStrip(paperEl);
+  const wet = paperEl.querySelector('.wetfront');
+  const dot = paperEl.querySelector('.dot');
+  const bandsBox = paperEl.querySelector('.bands');
+  if(wet) wet.style.height='0px';
+  bandsBox.innerHTML='';
+  dot.style.opacity = dotColor? '1':'0';
+  if(dotColor) dot.style.background = dotColor;
+}
 
-  /* ================= 比重大發現：天平 ================= */
-  (function(){
-    var range=$('#sgRange'), sugarVal=$('#sgSugarVal'), beam=$('#beam'),
-        cup=$('#sgCup'), surf=$('#sgSurface'), num=$('#sgNum'), sub=$('#sgSub'),
-        explain=$('#sgExplain'), glow=$('#glowSg'), reset=$('#sgReset');
-    if(!range) return;
+/* ============ HERO 自動示範 ============ */
+const heroPaper = document.getElementById('heroPaper');
+function playHero(){ resetStrip(heroPaper); runStrip(heroPaper, PENS.brownA, {dur:4200}); }
+window.addEventListener('load', ()=> setTimeout(playHero, 500));
+document.getElementById('heroReplay').addEventListener('click', playHero);
 
-    function sgValue(cubes){ return 1.00 + cubes*0.03; } // 純水1.00 → 6顆≈1.18
+/* ============ 實驗一 互動 ============ */
+const expPaper = document.getElementById('expPaper');
+const penSwatches = document.getElementById('penSwatches');
+const dotBtn = document.getElementById('dotBtn');
+const runBtn = document.getElementById('runBtn');
+const resetBtn = document.getElementById('resetBtn');
+const dotCount = document.getElementById('dotCount');
+const expReadout = document.getElementById('expReadout');
+const stageTag = document.getElementById('stageTag');
+let curPenKey = null, dotted = false, running = false;
 
-    function setSg(cubes){
-      cubes=Math.max(0,Math.min(6,cubes));
-      var sg=sgValue(cubes);
-      sugarVal.textContent=cubes;
-      num.textContent='比重 '+sg.toFixed(2);
-      sub.textContent='這杯是水的 '+sg.toFixed(2)+' 倍重';
-      // 糖水顏色隨糖量加深
-      var op=(0.30+cubes*0.07).toFixed(2);
-      cup.setAttribute('fill','rgba(255,212,121,'+op+')');
-      surf.setAttribute('opacity',(0.55+cubes*0.05).toFixed(2));
-      // 天平傾斜：糖越多右邊越重，往右下倒（最多約 10 度）
-      var ang=cubes*1.7;
-      beam.setAttribute('transform','rotate('+ang+' 165 74)');
-      // 狀態文字
-      var cssPea=getComputedStyle(document.documentElement).getPropertyValue('--pea').trim();
-      var cssSugar=getComputedStyle(document.documentElement).getPropertyValue('--sugar').trim();
-      if(cubes===0){
-        num.style.color=cssPea;
-        explain.style.borderColor=cssPea;
-        explain.innerHTML='<b>現在右邊是純水。</b>兩杯一樣重，天平平平的。水的比重就是 <b>1.00</b>，是大家比較的基準。加點方糖試試看！';
-        glow.style.filter='';
-      } else {
-        num.style.color=cssSugar;
-        explain.style.borderColor=cssSugar;
-        explain.innerHTML='<b>右邊的糖水比水重了！</b>比重 '+sg.toFixed(2)+'（是水的 '+sg.toFixed(2)+' 倍重），天平往右邊沉。比重<b>大於 1 就比水重，會沉下去</b>；在漸層飲料裡，比重越大的會待在<b>越下層</b>。';
-        glow.style.filter='drop-shadow(0 0 22px rgba(201,135,15,.4))';
+// 建立色筆色票
+Object.keys(PENS).forEach(key=>{
+  const p = PENS[key];
+  const sw = document.createElement('button');
+  sw.className='swatch'; sw.style.background=p.dot;
+  sw.setAttribute('aria-label', p.label);
+  sw.innerHTML = '<span>'+p.label.replace('色筆','')+'</span>';
+  sw.addEventListener('click', ()=>{
+    document.querySelectorAll('#penSwatches .swatch').forEach(s=>s.classList.remove('sel'));
+    sw.classList.add('sel');
+    curPenKey = key; dotted=false;
+    resetStrip(expPaper);
+    dotBtn.disabled=false; runBtn.disabled=true; dotCount.textContent='';
+    stageTag.textContent = '已選：'+p.label+' → 按「點上色料」';
+    expReadout.textContent = '已選好「'+p.label+'」。接著點上色料。';
+  });
+  penSwatches.appendChild(sw);
+});
+
+dotBtn.addEventListener('click', ()=>{
+  if(!curPenKey || running) return;
+  resetStrip(expPaper, PENS[curPenKey].dot);
+  dotBtn.disabled=true;
+  // 模擬筆停留 2~3 秒，色料變濃
+  if(REDUCED){ dotted=true; runBtn.disabled=false; dotCount.textContent='✓ 濃'; stageTag.textContent='色料已點好 → 按「加水」'; return; }
+  let n=3; dotCount.textContent=n+' 秒';
+  const dot = expPaper.querySelector('.dot');
+  dot.style.opacity='0.55';
+  const iv = setInterval(()=>{
+    n--; 
+    dot.style.opacity = String(0.55 + (3-n)*0.15);
+    if(n>0){ dotCount.textContent=n+' 秒'; }
+    else { clearInterval(iv); dotCount.textContent='✓ 色料夠濃了'; dotted=true; runBtn.disabled=false;
+           stageTag.textContent='色料已點好 → 按「加水，開始分析」'; 
+           expReadout.textContent='色料點好了！筆停留越久，顏色越濃、結果越清楚。現在加水吧。'; }
+  },800);
+});
+
+runBtn.addEventListener('click', ()=>{
+  if(!curPenKey || !dotted || running) return;
+  const pen = PENS[curPenKey];
+  running=true; runBtn.disabled=true; dotBtn.disabled=true;
+  stageTag.textContent='水正沿著濾紙往上爬…';
+  expReadout.textContent='觀察中：色料正被水帶上去，慢慢分開…';
+  runStrip(expPaper, pen, {dur:5000, onDone:()=>{
+    running=false;
+    showResult(pen);
+    stageTag.textContent='分析完成！';
+  }});
+});
+
+resetBtn.addEventListener('click', ()=>{
+  running=false; dotted=false;
+  resetStrip(expPaper, curPenKey?PENS[curPenKey].dot:null);
+  dotBtn.disabled = !curPenKey; runBtn.disabled=true; dotCount.textContent='';
+  stageTag.textContent = curPenKey? '重來：按「點上色料」' : '← 先在右邊選一枝筆';
+  expReadout.textContent = curPenKey? '已重設，重新點色料試試看。' : '選好筆、點上色料、加水，結果會顯示在這裡。';
+});
+
+function showResult(pen){
+  const top = pen.bands.reduce((a,b)=> b.rf>a.rf?b:a);
+  const main = pen.bands.reduce((a,b)=> (b.k==null?1:b.k) > (a.k==null?1:a.k) ? b : a);
+  let chips = pen.bands.slice().sort((a,b)=>b.rf-a.rf).map(b=>{
+    const k=(b.k==null?1:b.k);
+    const tag = k>=0.85?'（濃）' : k<=0.5?'（淡）' : '';
+    return '<span class="cchip" style="background:'+b.c+';opacity:'+(0.55+0.45*k).toFixed(2)+'"><i></i>'+b.n+tag+'</span>';
+  }).join('');
+  expReadout.innerHTML =
+    '<b>'+pen.label+'</b> 其實藏了 <b>'+pen.bands.length+'</b> 種色料：'+
+    '<div class="chips">'+chips+'</div>'+
+    '<div style="margin-top:10px">爬得最高的是「<b>'+top.n+'</b>」→ 它對紙的附著力最小，最容易被水帶走。色帶有濃有淡：「<b>'+main.n+'</b>」最濃，代表這枝筆裡它的比例最多。</div>';
+}
+
+/* ============ 想想看 ============ */
+document.getElementById('thinkBtn').addEventListener('click', ()=>{
+  document.getElementById('thinkAns').textContent =
+    '看起來一樣，其實不一定！廠牌不同，調出棕色的色料配方也常常不同——做色層分析就會現出原形。';
+});
+
+/* ============ 毛細現象 demo ============ */
+const capWater = document.getElementById('capWater');
+const capPaper = document.getElementById('capPaper');
+let capSpecks=[];
+document.getElementById('capBtn').addEventListener('click', ()=>{
+  // 清掉舊的色點
+  capSpecks.forEach(s=>s.remove()); capSpecks=[];
+  capWater.style.transition='none'; capWater.style.height='14%';
+  // 放幾顆色點隨水上升
+  const cols=['#ff6b81','#ffe066','#5cd6ff'];
+  cols.forEach((c,i)=>{
+    const sp=document.createElement('div'); sp.className='speck';
+    sp.style.background=c; sp.style.left=(28+i*22)+'%';
+    capPaper.appendChild(sp); capSpecks.push(sp);
+  });
+  if(REDUCED){
+    capWater.style.height='92%';
+    capSpecks.forEach(sp=>{sp.style.opacity='1';sp.style.bottom='80%';});
+    return;
+  }
+  requestAnimationFrame(()=>{
+    capWater.style.transition='height 2.8s ease-out';
+    capWater.style.height='92%';
+    capSpecks.forEach((sp,i)=>{
+      sp.style.transition='bottom 2.8s ease-out, opacity .5s';
+      sp.style.opacity='1';
+      setTimeout(()=>{ sp.style.bottom=(60+i*8)+'%'; }, 200);
+    });
+  });
+});
+
+/* ============ 附著力 比一比 ============ */
+const dotHigh=document.getElementById('dotHigh');
+const dotLow=document.getElementById('dotLow');
+document.getElementById('affBtn').addEventListener('click', ()=>{
+  dotHigh.style.transition='none'; dotLow.style.transition='none';
+  dotHigh.style.transform='translateX(-50%) translateY(0)';
+  dotLow.style.transform='translateX(-50%) translateY(0)';
+  if(REDUCED){
+    dotHigh.style.transform='translateX(-50%) translateY(-105px)';
+    dotLow.style.transform='translateX(-50%) translateY(-42px)';
+    return;
+  }
+  requestAnimationFrame(()=>{
+    dotHigh.style.transition='transform 2.6s ease-out';
+    dotLow.style.transition='transform 2.6s ease-out';
+    dotHigh.style.transform='translateX(-50%) translateY(-105px)';
+    dotLow.style.transform='translateX(-50%) translateY(-42px)';
+  });
+});
+
+/* ============ 油性 / 水性 溶劑配對 ============ */
+let selPen='water', selSolv='water';
+const matchOut=document.getElementById('matchOut');
+function evalMatch(){
+  // 水性筆：水溶性 → 只能用水分離
+  // 油性筆：油溶性 → 只能用有機溶劑（汽油、丙酮）分離
+  const organic = (selSolv==='gas'||selSolv==='acetone');
+  let ok=false, title='', desc='';
+  if(selPen==='water'){
+    if(selSolv==='water'){ ok=true; title='成功分離！';
+      desc='水性筆的色料溶於水，用水就能把不同色料帶開、分離出來。'; }
+    else { ok=false; title='沒有反應';
+      desc='水性色料不溶於汽油、丙酮這類有機溶劑，所以一般彩色筆不能用汽油分離。'; }
+  } else { // oil
+    if(organic){ ok=true; title='成功分離！';
+      desc='油性筆（奇異筆）的色料溶於有機溶劑，用'+(selSolv==='gas'?'汽油':'丙酮')+'就能把它分離開來。'; }
+    else { ok=false; title='沒有反應';
+      desc='油性筆的色料不溶於水，用水沒辦法把它的色素分離。要改用汽油或丙酮等有機溶劑。'; }
+  }
+  matchOut.className = 'matchout '+(ok?'ok':'no');
+  matchOut.innerHTML =
+    '<div class="icn">'+(ok?'🌈':'🚫')+'</div>'+
+    '<div><div class="m-t">'+title+'</div><div class="m-d">'+desc+'</div></div>';
+}
+document.querySelectorAll('#penType .segbtn').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    document.querySelectorAll('#penType .segbtn').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on'); selPen=b.dataset.pen; evalMatch();
+  });
+});
+document.querySelectorAll('#solvType .segbtn').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    document.querySelectorAll('#solvType .segbtn').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on'); selSolv=b.dataset.solv; evalMatch();
+  });
+});
+evalMatch();
+
+/* ============ 測驗 10 題 ============ */
+const QUIZ = [
+  { q:'做色層分析時，畫基準線一定要用「鉛筆」，為什麼？',
+    o:['鉛筆比較好畫','鉛筆是碳，不會溶在水裡、不會被分離掉','用色筆比較不環保','鉛筆的線比較細'],
+    a:1, e:'鉛筆的碳不溶於水，不會被水帶走。如果用色筆畫線，那條線自己也會被色層分析掉。'},
+  { q:'把一枝棕色筆點在濾紙上做色層分析，最可能看到什麼？',
+    o:['整張紙變棕色','只有棕色往上爬','分離出好幾種不同的顏色','什麼都沒發生'],
+    a:2, e:'棕色其實是好幾種色料混合而成，做色層分析就會把它們一一分離出來。'},
+  { q:'色料為什麼會自己沿著濾紙往上爬？',
+    o:['因為有人吹氣','因為毛細現象，水沿著濾紙縫隙上升並帶著色料','因為色料比較輕','因為紙會發熱'],
+    a:1, e:'濾紙裡有很多細小縫隙，水靠毛細現象往上爬，順便把溶在水裡的色料一起帶上去。'},
+  { q:'做實驗時，色點應該點在什麼位置？',
+    o:['泡在水面下方','剛好在水面上','在水面的上方','點在紙的最頂端'],
+    a:2, e:'色點要在水面上方。若泡在水裡，色料會直接溶到水中，就看不到爬升分離的過程。'},
+  { q:'兩枝「不同廠牌」的棕色筆做色層分析，結果通常會：',
+    o:['完全一樣','不太一樣','都變成黑色','沒有顏色'],
+    a:1, e:'廠牌不同，調出棕色的色料配方常常不同，所以分離出來的顏色組合也不一樣。'},
+  { q:'一般彩色筆（水性筆）的色料，可以用下列哪一種來分離？',
+    o:['汽油','水','沙拉油','什麼都不行'],
+    a:1, e:'水性筆的色料溶於水，所以用水就能分離。'},
+  { q:'奇異筆（油性筆）用「水」可以把色素分離嗎？',
+    o:['可以，跟彩色筆一樣','不行，因為它不溶於水','可以，但要等很久','只有黑色可以'],
+    a:1, e:'油性筆的色料不溶於水，要改用汽油、丙酮等有機溶劑才能分離。'},
+  { q:'在色譜上，爬得「最高」的色料代表它：',
+    o:['對紙的附著力比較小','對紙的附著力比較大','顏色比較深','比較不溶於水'],
+    a:0, e:'附著力小、黏紙黏得鬆，就容易被水帶著跑，爬得最高。'},
+  { q:'點色料時，老師說筆要停留 2～3 秒，目的是什麼？',
+    o:['讓墨水變乾','增加色料的濃度，結果更清楚','讓紙破洞','沒有特別用意'],
+    a:1, e:'停留久一點可以讓色料更濃，分離出來的色帶會更明顯、更好觀察。'},
+  { q:'「色層分析法」是利用什麼，把不同色料分開的方法？',
+    o:['用磁鐵吸','用溶劑加上毛細現象','用火加熱','用剪刀剪開'],
+    a:1, e:'色層分析法：用溶劑（如水、汽油），利用毛細現象，把混在一起的色料分離開來。'},
+];
+
+const quizBox=document.getElementById('quizBox');
+let answered=0, score=0;
+
+QUIZ.forEach((item, qi)=>{
+  const q=document.createElement('div'); q.className='q';
+  let optHtml='';
+  item.o.forEach((opt,oi)=>{
+    optHtml += '<button class="opt" data-q="'+qi+'" data-o="'+oi+'">'+
+      '<span class="key">'+'ＡＢＣＤ'.charAt(oi)+'</span><span>'+opt+'</span></button>';
+  });
+  q.innerHTML =
+    '<div class="qnum">第 '+(qi+1)+' 題</div>'+
+    '<div class="qtext">'+item.q+'</div>'+
+    '<div class="opts">'+optHtml+'</div>'+
+    '<div class="explain" id="exp-'+qi+'"><b>解析：</b>'+item.e+'</div>';
+  quizBox.appendChild(q);
+});
+
+quizBox.addEventListener('click', e=>{
+  const btn = e.target.closest('.opt');
+  if(!btn || btn.disabled) return;
+  const qi=+btn.dataset.q, oi=+btn.dataset.o;
+  const correct = QUIZ[qi].a;
+  // 鎖定該題所有選項
+  const opts = quizBox.querySelectorAll('.opt[data-q="'+qi+'"]');
+  opts.forEach(o=>{
+    o.disabled=true;
+    const idx=+o.dataset.o;
+    if(idx===correct) o.classList.add('correct');
+  });
+  if(oi!==correct) btn.classList.add('wrong');
+  else score++;
+  document.getElementById('exp-'+qi).classList.add('show');
+  answered++;
+  document.getElementById('scoreNum').textContent=score;
+  document.getElementById('qProgress').style.width=(answered/QUIZ.length*100)+'%';
+  if(answered===QUIZ.length) finishQuiz();
+});
+
+function finishQuiz(){
+  const r=document.getElementById('quizResult');
+  document.getElementById('bigScore').textContent=score+' / 10';
+  let msg='';
+  if(score===10) msg='滿分！你已經完全懂色層分析了，太厲害了！🏆';
+  else if(score>=8) msg='很棒！只差一點點就滿分，再看一下解析就完全掌握了。';
+  else if(score>=6) msg='不錯喔！把答錯的解析再讀一遍，概念會更清楚。';
+  else msg='沒關係，回去再做一次實驗、讀讀解析，你會進步很多！';
+  document.getElementById('resultMsg').textContent=msg;
+  r.classList.add('show');
+  r.scrollIntoView({behavior:REDUCED?'auto':'smooth', block:'center'});
+}
+
+document.getElementById('retryBtn').addEventListener('click', ()=>{
+  answered=0; score=0;
+  document.getElementById('scoreNum').textContent='0';
+  document.getElementById('qProgress').style.width='0%';
+  document.getElementById('quizResult').classList.remove('show');
+  quizBox.querySelectorAll('.opt').forEach(o=>{o.disabled=false;o.classList.remove('correct','wrong');});
+  quizBox.querySelectorAll('.explain').forEach(x=>x.classList.remove('show'));
+  document.getElementById('quiz').scrollIntoView({behavior:REDUCED?'auto':'smooth'});
+});
+
+/* ============ 你知道嗎：黑色猜一猜 ============ */
+const blackAns=document.getElementById('blackAns');
+const BLACK_REVEAL='很多黑色水性筆，是把黃、青、洋紅等好幾種色料混在一起調出來的——所以做色層分析時，黑色筆常常分離出<b style="color:var(--ink)">最多</b>顏色！而鉛筆和墨汁用的「碳」才是單一的黑，不溶於水、不會被分離，這也是基準線要用鉛筆畫的原因。';
+document.querySelectorAll('#blackGuess .segbtn').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    document.querySelectorAll('#blackGuess .segbtn').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');
+    const right=b.dataset.g==='4';
+    blackAns.innerHTML='<b style="color:'+(right?'var(--good)':'var(--bad)')+'">'+(right?'答對了！':'可惜～猜大膽一點：是 4 種以上！')+'</b> '+BLACK_REVEAL;
+  });
+});
+
+/* ============ 你知道嗎：偵探小劇場 ============ */
+const CASE_PATTERNS=[
+  [{c:'#ffe066',rf:.88},{c:'#5cd6ff',rf:.55},{c:'#ff6b9d',rf:.24}],
+  [{c:'#ffa64a',rf:.80},{c:'#5ce6a8',rf:.48},{c:'#4aa3ff',rf:.18}],
+  [{c:'#ffd94a',rf:.92},{c:'#b18cff',rf:.40}],
+];
+function renderDyk(el,pat){
+  el.innerHTML='<div class="bl"></div>';
+  const h=130,base=14,range=h-base-16;
+  pat.forEach(b=>{
+    const d=document.createElement('div');d.className='dyk-band';
+    d.style.background=b.c;d.style.bottom=(base+b.rf*range-3)+'px';
+    el.appendChild(d);
+  });
+}
+const evidStrip=document.getElementById('evidStrip');
+const suspectsBox=document.getElementById('suspects');
+const verdict=document.getElementById('verdict');
+let caseAnswer=0;
+function newCase(){
+  const order=[0,1,2].sort(()=>Math.random()-.5);
+  const evid=Math.floor(Math.random()*3);
+  caseAnswer=order.indexOf(evid);
+  renderDyk(evidStrip,CASE_PATTERNS[evid]);
+  suspectsBox.innerHTML='';
+  verdict.textContent='';
+  ['甲','乙','丙'].forEach((nm,i)=>{
+    const btn=document.createElement('button');btn.className='suspect';
+    btn.innerHTML='<div class="dyk-strip"></div><div class="s-name">嫌疑筆 '+nm+'</div>';
+    suspectsBox.appendChild(btn);
+    renderDyk(btn.querySelector('.dyk-strip'),CASE_PATTERNS[order[i]]);
+    btn.addEventListener('click',()=>{
+      if(btn.disabled)return;
+      if(i===caseAnswer){
+        btn.classList.add('hit');
+        verdict.innerHTML='<span style="color:var(--good)">🎉 破案！</span>嫌疑筆 '+nm+' 的色譜和證物完全吻合——是同一種墨水。';
+        suspectsBox.querySelectorAll('.suspect').forEach(s=>s.disabled=true);
+      }else{
+        btn.classList.add('miss');btn.disabled=true;
+        verdict.innerHTML='<span style="color:var(--bad)">不是這枝。</span>色帶的顏色或高度對不上，再比對一次！';
       }
-    }
-    range.addEventListener('input',function(){setSg(parseInt(range.value,10));});
-    reset.addEventListener('click',function(){range.value=0;setSg(0);});
-    setSg(0);
-  })();
-
-  /* ================= 練習一：漸層調酒 ================= */
-  var LIQS={
-    sugar:{name:'糖水',     color:[255,212,121], pea:false, acid:0},
-    lemon:{name:'檸檬水',   color:[242,226,150], pea:false, acid:-1},
-    soda: {name:'小蘇打水', color:[214,228,242], pea:false, acid:1},
-    pea:  {name:'蝶豆花水', color:[67,97,238],   pea:true,  acid:0}
-  };
-  var REACT_ACID=[214,51,108], REACT_BASE=[22,199,154]; // 花青素遇酸/鹼的反應色
-  var GLASS={top:36, bottom:262, x:52, w:66}; // svg geometry of inner glass
-  var GLASS_BOTTOM_W=50, GLASS_BOTTOM_X=60;
-  var stack=[];               // {density,color,name} bottom-first
-  var maxLayers=5;
-  var selected=null, sugar=3, hasIce=false;
-
-  var palette=$('#palette'), sugarRange=$('#sugarRange'), sugarVal=$('#sugarVal'),
-      weightFill=$('#weightFill'), pourBtn=$('#pourBtn'), barToast=$('#barToast'),
-      layersG=$('#layers'), legend=$('#legend'), glow2=$('#glow2'),
-      iceBtn=$('#iceBtn'), iceLabel=$('#iceLabel'), iceG=$('#iceG'), dynGrads=$('#dynGrads');
-
-  $$('.liq',palette).forEach(function(b){
-    b.addEventListener('click',function(){
-      $$('.liq',palette).forEach(function(x){x.setAttribute('aria-pressed','false');});
-      b.setAttribute('aria-pressed','true');
-      selected=b.getAttribute('data-liq');
-      pourBtn.disabled=false;
-      barToast.className='toast';
-      barToast.textContent='已選「'+LIQS[selected].name+'」，'+sugar+' 顆方糖。按「倒入杯中」試試看！';
     });
   });
-  sugarRange.addEventListener('input',function(){
-    sugar=parseInt(sugarRange.value,10);
-    sugarVal.textContent=sugar;
-    weightFill.style.width=(sugar/6*100)+'%';
-  });
+}
+document.getElementById('newCase').addEventListener('click',newCase);
+newCase();
 
-  function density(liq,s){ return 1.00 + s*0.06; } // 水基底 + 糖
-
-  function colMix(a,b){return [Math.round((a[0]+b[0])/2),Math.round((a[1]+b[1])/2),Math.round((a[2]+b[2])/2)];}
-
-  // 花青素交界反應：藍色蝶豆花層碰到酸/鹼的鄰層，交界處會變色——這就是漸層的來源！
-  function reactColor(acid){ return acid<0 ? REACT_ACID : REACT_BASE; }
-  function layerFill(i){
-    var L=stack[i];
-    if(!L.pea || L.acid!==0) return rgb(L.color);   // 非蝶豆花、或已混合反應過 → 單色
-    var below=stack[i-1], above=stack[i+1];
-    var bR=(below && !below.pea && below.acid!==0) ? reactColor(below.acid) : null;
-    var tR=(above && !above.pea && above.acid!==0) ? reactColor(above.acid) : null;
-    if(!bR && !tR) return rgb(L.color);
-    var id='lg'+i, blue=rgb(L.color), stops='';
-    stops+='<stop offset="0%" stop-color="'+(tR?rgb(tR):blue)+'"/>';
-    if(tR) stops+='<stop offset="38%" stop-color="'+blue+'"/>';
-    if(bR) stops+='<stop offset="55%" stop-color="'+blue+'"/>';
-    stops+='<stop offset="100%" stop-color="'+(bR?rgb(bR):blue)+'"/>';
-    dynGrads.innerHTML+='<linearGradient id="'+id+'" x1="0" y1="0" x2="0" y2="1">'+stops+'</linearGradient>';
-    return 'url(#'+id+')';
-  }
-  function hasReaction(){
-    for(var i=0;i<stack.length;i++){
-      var L=stack[i]; if(!L.pea || L.acid!==0) continue;
-      var b=stack[i-1], a=stack[i+1];
-      if((b&&!b.pea&&b.acid!==0)||(a&&!a.pea&&a.acid!==0)) return true;
-    }
-    return false;
-  }
-
-  // 冰塊圖形：像真的調酒一樣加到九分滿，從杯底附近自然散佈到杯口（超出杯壁會被裁切）
-  var ICE_CUBES=[
-    {x:68,y:58,s:16,r:-10},{x:96,y:64,s:14,r:12},
-    {x:80,y:84,s:17,r:-5},{x:106,y:92,s:13,r:8},
-    {x:64,y:108,s:15,r:15},{x:92,y:118,s:16,r:-12},
-    {x:72,y:142,s:14,r:6},{x:102,y:150,s:15,r:-8},
-    {x:84,y:172,s:17,r:10},{x:66,y:198,s:13,r:-14},
-    {x:98,y:204,s:14,r:7},{x:82,y:228,s:15,r:-6}
-  ];
-  function renderIce(){
-    if(!hasIce){ iceG.innerHTML=''; return; }
-    var html='';
-    ICE_CUBES.forEach(function(c){
-      var h=c.s/2;
-      html+='<g transform="translate('+c.x+','+c.y+') rotate('+c.r+')">'+
-        '<rect x="'+(-h)+'" y="'+(-h)+'" width="'+c.s+'" height="'+c.s+'" rx="4" '+
-        'fill="#ffffff" fill-opacity="0.22" stroke="#ffffff" stroke-opacity="0.5" stroke-width="1.2"/>'+
-        '<rect x="'+(-h+2.5)+'" y="'+(-h+2.5)+'" width="'+(c.s*0.3)+'" height="'+(c.s*0.3)+'" rx="2" '+
-        'fill="#ffffff" fill-opacity="0.55"/></g>';
-    });
-    iceG.innerHTML=html;
-  }
-
-  iceBtn.addEventListener('click',function(){
-    if(hasIce){
-      barToast.className='toast';
-      barToast.textContent='冰塊已經在杯子裡囉，接著選比較輕的飲料，沿著冰塊輕輕倒入。';
-      return;
-    }
-    hasIce=true;
-    iceBtn.setAttribute('aria-pressed','true');
-    iceLabel.innerHTML='已加冰塊 ❄️<small>現在沿著冰塊輕輕倒，才不會混</small>';
-    renderIce();
-    glow2.style.filter='drop-shadow(0 0 22px rgba(168,222,245,.55))';
-    barToast.className='toast ok';
-    barToast.textContent='冰塊加到九分滿了 🧊 現在把比較輕（糖比較少）的飲料沿著冰塊慢慢倒，就能乖乖疊上去！';
-  });
-
-  // 杯子是上寬下窄，依高度算寬度，讓液面貼合杯壁
-  function widthAt(y){
-    var t=(y-GLASS.top)/(GLASS.bottom-GLASS.top); // 0 top -> 1 bottom
-    var wTop=GLASS.w, wBot=GLASS_BOTTOM_W;
-    return wTop+(wBot-wTop)*t;
-  }
-  function xAt(y){
-    var t=(y-GLASS.top)/(GLASS.bottom-GLASS.top);
-    var xTop=GLASS.x, xBot=GLASS_BOTTOM_X;
-    return xTop+(xBot-xTop)*t;
-  }
-
-  function renderStack(animateNew){
-    layersG.innerHTML=''; dynGrads.innerHTML='';
-    var usableTop=GLASS.top+18;            // 留一點空杯口
-    var usableBottom=GLASS.bottom-2;
-    var totalH=usableBottom-usableTop;
-    var n=stack.length;
-    if(n===0){renderLegend();return;}
-    var hPer=totalH/maxLayers;             // 每層固定高度（最多5層填滿）
-    // 由底往上畫
-    for(var i=0;i<n;i++){
-      var layer=stack[i];
-      var yBottom=usableBottom - i*hPer;
-      var yTop=yBottom - hPer;
-      var r=document.createElementNS('http://www.w3.org/2000/svg','rect');
-      r.setAttribute('x',GLASS.x); r.setAttribute('width',GLASS.w);
-      r.setAttribute('y',yTop); r.setAttribute('height',hPer+0.6);
-      r.setAttribute('fill',layerFill(i));
-      if(animateNew && i===n-1){
-        r.setAttribute('y',usableBottom-0.5); r.setAttribute('height',0.5);
-        layersG.appendChild(r);
-        var startY=usableBottom-0.5;
-        var t0=null, dur=420;
-        (function(rect,fromY,toY,toH){
-          function step(ts){
-            if(t0===null)t0=ts;
-            var k=Math.min(1,(ts-t0)/dur);
-            var ease=1-Math.pow(1-k,3);
-            rect.setAttribute('y', fromY+(toY-fromY)*ease);
-            rect.setAttribute('height', 0.5+(toH-0.5)*ease);
-            if(k<1) requestAnimationFrame(step);
-          }
-          requestAnimationFrame(step);
-        })(r,startY,yTop,hPer+0.6);
-      } else {
-        layersG.appendChild(r);
-      }
-    }
-    renderLegend();
-  }
-
-  function renderLegend(){
-    if(stack.length===0){legend.innerHTML='';return;}
-    var html='';
-    for(var i=stack.length-1;i>=0;i--){
-      var L=stack[i];
-      html+='<div class="row"><i style="background:'+rgb(L.color)+'"></i>'+
-            '第 '+(i+1)+' 層 · '+L.name+'（重量 '+L.density.toFixed(2)+'）</div>';
-    }
-    legend.innerHTML=html;
-  }
-
-  function checkWin(){
-    if(stack.length>=3){
-      barToast.className='toast win';
-      barToast.innerHTML='🎉 太棒了！你成功疊出 '+stack.length+' 層漸層飲料！秘訣：<b>最重的先倒</b>、<b>加冰塊沿著冰塊輕輕倒</b>'+
-        (hasReaction()?'。再看交界處——藍色蝶豆花水碰到酸/鹼，邊界變色了，這就是漸層最美的地方 🌈':'，最輕的最後加 🧊');
-      glow2.style.filter='drop-shadow(0 0 30px rgba(255,200,87,.65))';
-    }
-  }
-
-  // 混合時的化學：含蝶豆花＋酸 → 整層變紫紅；含蝶豆花＋鹼 → 變藍綠
-  function mixInto(top,nl){
-    var pea=top.pea||nl.pea;
-    var acid;
-    if(top.acid===0) acid=nl.acid;
-    else if(nl.acid===0) acid=top.acid;
-    else acid=(top.acid===nl.acid)?top.acid:0;   // 酸+鹼 → 互相中和
-    var color;
-    if(pea && acid<0)      color=REACT_ACID.slice();
-    else if(pea && acid>0) color=REACT_BASE.slice();
-    else if(pea)           color=LIQS.pea.color.slice();
-    else                   color=colMix(top.color,nl.color);
-    top.pea=pea; top.acid=acid; top.color=color;
-    top.density=Math.max(top.density,nl.density);
-    top.name=top.name+'＋'+nl.name;
-    // 回傳是否發生變色反應，給提示用
-    return pea && acid!==0;
-  }
-
-  pourBtn.addEventListener('click',function(){
-    if(!selected) return;
-    var L=LIQS[selected];
-    var newLayer={density:density(selected,sugar),color:L.color.slice(),name:L.name,pea:L.pea,acid:L.acid};
-
-    if(stack.length===0){
-      stack.push(newLayer);
-      barToast.className='toast ok';
-      barToast.innerHTML='第 1 層下去了！接著按「🧊 加冰塊」，再倒比較輕（糖比較少）的飲料疊上去。';
-      renderStack(true); return;
-    }
-    if(stack.length>=maxLayers){
-      barToast.className='toast';
-      barToast.textContent='杯子滿囉！按「清空杯子」再重新挑戰。';
-      return;
-    }
-
-    var top=stack[stack.length-1];
-    var lighter=(newLayer.density < top.density - 0.001);
-
-    if(lighter && hasIce){
-      // 比上層輕 + 有冰塊緩衝 → 乾淨疊一層
-      stack.push(newLayer);
-      renderStack(true);
-      // 交界反應提示：藍色蝶豆花水碰到下層的酸/鹼
-      if(newLayer.pea && !top.pea && top.acid!==0){
-        barToast.className='toast win';
-        barToast.innerHTML=(top.acid<0
-          ? '🌈 看交界處！藍色蝶豆花水碰到下層酸酸的'+top.name.split('＋')[0]+'，邊界變出<b>紫紅色</b>——漸層出現了！'
-          : '🌈 看交界處！藍色蝶豆花水碰到下層鹼性的'+top.name.split('＋')[0]+'，邊界變出<b>藍綠色</b>——漸層出現了！');
-      } else {
-        barToast.className='toast ok';
-        barToast.textContent='漂亮！沿著冰塊輕輕倒，這層穩穩浮在上面，又多一層 ✨';
-      }
-      checkWin();
-    } else if(lighter && !hasIce){
-      // 比上層輕，但沒冰塊 → 水流太衝把下層沖混
-      var reactedA=mixInto(top,newLayer);
-      barToast.className='toast mix';
-      barToast.innerHTML='💧 沒加冰塊，倒下去的水太衝，把下層<b>沖混</b>了！先按「🧊 加冰塊」，再沿著冰塊輕輕倒就不會混。'+
-        (reactedA?'（你看，蝶豆花碰到'+(top.acid<0?'酸，整層變紫紅':'鹼，整層變藍綠')+'了！）':'');
-      renderStack(false);
-    } else {
-      // 一樣重或更重 → 沉下去混合（不論有沒有冰塊）
-      var reactedB=mixInto(top,newLayer);
-      barToast.className='toast mix';
-      barToast.innerHTML='💧 糟糕，它<b>一樣重或更重</b>，沉下去和下層混在一起了！記得：糖多（比較重）的要先倒。'+
-        (reactedB?'（你看，蝶豆花碰到'+(top.acid<0?'酸，整層變紫紅':'鹼，整層變藍綠')+'了！）':'');
-      renderStack(false);
+/* ============ 導覽列 highlight ============ */
+const sections=[...document.querySelectorAll('section[id]')];
+const navlinks=[...document.querySelectorAll('.navpills button')];
+const obs=new IntersectionObserver(entries=>{
+  entries.forEach(en=>{
+    if(en.isIntersecting){
+      const id=en.target.id;
+      navlinks.forEach(l=>l.classList.toggle('active', l.dataset.t===id));
     }
   });
+},{rootMargin:'-45% 0px -50% 0px'});
+sections.forEach(s=>obs.observe(s));
 
-  $('#resetGlass').addEventListener('click',function(){
-    stack=[]; hasIce=false;
-    renderStack(false); renderIce();
-    iceBtn.setAttribute('aria-pressed','false');
-    iceLabel.innerHTML='加冰塊到杯中<small>沿著冰塊輕輕倒，才不會混在一起</small>';
-    glow2.style.filter='';
-    barToast.className='toast';
-    barToast.textContent='杯子清空了！順序：選飲料 → 先倒最重的當底 → 加冰塊 → 再倒輕的疊層。';
+/* ============ 頁內跳轉：全部用按鈕＋JS 捲動（不經過連結，預覽不會被攔截） ============ */
+document.querySelectorAll('[data-t]').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    const t=document.getElementById(b.dataset.t);
+    if(t) t.scrollIntoView({behavior:REDUCED?'auto':'smooth'});
   });
-  renderStack(false);
-
-  /* ================= 闖關測驗 ================= */
-  var QUESTIONS=[
-    {tag:'變色魔法', q:'蝶豆花泡出來的水，原本（中性）是什麼顏色？',
-     o:['藍色','紅色','綠色','透明無色'], a:0,
-     fb:'答對囉！花青素在中性的水裡呈現漂亮的<b>藍色</b>，這就是蝶豆花水的原色。'},
-    {tag:'酸鹼變色', q:'在蝶豆花水裡加入「檸檬汁」（酸性），顏色會變成？',
-     o:['變更藍','紫紅色','變透明','金黃色'], a:1,
-     fb:'沒錯！花青素遇到<b>酸</b>會改變結構，把藍色變成<b>紫紅色</b>。'},
-    {tag:'酸鹼變色', q:'在蝶豆花水裡加入「小蘇打水」（鹼性），顏色會變成？',
-     o:['藍綠色','深紅色','黑色','沒有變化'], a:0,
-     fb:'答對！加入<b>鹼</b>之後，花青素讓水變成清涼的<b>藍綠色</b>。'},
-    {tag:'科學名詞', q:'讓蝶豆花會「看臉色變顏色」的神奇色素叫做什麼？',
-     o:['葉綠素','花青素','胡蘿蔔素','維他命C'], a:1,
-     fb:'正確！這個色素是<b>花青素</b>，它會隨著酸鹼度改變結構，呈現不同顏色。'},
-    {tag:'生活連結', q:'除了蝶豆花，下列哪一種食物裡也找得到花青素？',
-     o:['白米飯','紫色高麗菜','白蘿蔔','鹽巴'], a:1,
-     fb:'答對！<b>紫色高麗菜</b>、藍莓、葡萄、紫甘藍都含有花青素，一樣會隨酸鹼變色。'},
-    {tag:'比重與漸層', q:'要做漸層飲料，糖加最多、最重的那一杯，應該放在杯子的哪一層？',
-     o:['最上層','中間層','最下層','隨便都可以'], a:2,
-     fb:'正確！糖最多的溶液<b>最重</b>，要先倒、放在<b>最下層</b>，上面的層才疊得起來。'},
-    {tag:'漸層成因', q:'漸層飲料裡，藍色的蝶豆花水疊在檸檬水上面，交界的地方會變成什麼顏色？',
-     o:['還是藍色','紫紅色','透明','黑色'], a:1,
-     fb:'答對！蝶豆花的花青素碰到<b>酸</b>會變色，所以藍色蝶豆花水和檸檬水的<b>交界</b>會出現<b>紫紅色</b>——這就是漸層最美的地方！'},
-    {tag:'材料分類', q:'下列哪一個是「酸性」的材料？',
-     o:['檸檬汁','小蘇打','清水','方糖'], a:0,
-     fb:'正確！<b>檸檬汁</b>是酸性；小蘇打是鹼性；清水大致中性；方糖不是酸也不是鹼。'},
-    {tag:'調製技巧', q:'倒上層飲料時，要「緩緩沿著冰塊（或杯壁）倒入」，主要目的是？',
-     o:['讓飲料比較冰','減緩衝擊力，避免兩層混在一起','讓糖溶得更快','把冰塊洗乾淨'], a:1,
-     fb:'答對！沿著冰塊輕輕倒可以<b>減緩衝擊</b>，讓新的一層穩穩浮著，不會把下層沖混。'},
-    {tag:'應用', q:'因為會隨酸鹼變色，花青素可以像石蕊試紙一樣拿來做什麼？',
-     o:['電池','酸鹼指示劑','黏著劑','防曬乳'], a:1,
-     fb:'完全正確！花青素可以當作<b>酸鹼指示劑</b>：在酸中偏紅、中性偏紫/藍、鹼中偏黃綠。'}
-  ];
-
-  var qIdx=0, score=0, answered=false;
-  var qBody=$('#qBody'), qProg=$('#qProg'), qCount=$('#qCount');
-  var KEYS=['A','B','C','D'];
-
-  function renderQuestion(){
-    answered=false;
-    var Q=QUESTIONS[qIdx];
-    qCount.textContent='第 '+(qIdx+1)+' / '+QUESTIONS.length+' 題';
-    qProg.style.width=(qIdx/QUESTIONS.length*100)+'%';
-    var html='<div class="qtag">'+Q.tag+'</div><div class="qtext">'+Q.q+'</div><div class="opts">';
-    Q.o.forEach(function(opt,i){
-      html+='<button class="opt" data-i="'+i+'"><span class="key">'+KEYS[i]+'</span><span>'+opt+'</span></button>';
-    });
-    html+='</div><div class="feedback" id="fb"></div>'+
-          '<div class="qnav"><button class="next" id="nextBtn" disabled>下一題 →</button></div>';
-    qBody.innerHTML=html;
-
-    $$('.opt',qBody).forEach(function(btn){
-      btn.addEventListener('click',function(){ pick(parseInt(btn.getAttribute('data-i'),10)); });
-    });
-    $('#nextBtn').addEventListener('click',nextQ);
-  }
-
-  function pick(i){
-    if(answered) return;
-    answered=true;
-    var Q=QUESTIONS[qIdx];
-    var opts=$$('.opt',qBody);
-    opts.forEach(function(b){
-      b.disabled=true;
-      var bi=parseInt(b.getAttribute('data-i'),10);
-      if(bi===Q.a) b.classList.add('correct');
-      else if(bi===i) b.classList.add('wrong');
-    });
-    var fb=$('#fb');
-    if(i===Q.a){
-      score++;
-      fb.className='feedback right show';
-      fb.innerHTML='✅ <b>答對了！</b> '+Q.fb;
-    } else {
-      fb.className='feedback wrongfb show';
-      fb.innerHTML='❌ <b>正確答案是 '+KEYS[Q.a]+'：'+Q.o[Q.a]+'</b>。<br>'+Q.fb;
-    }
-    $('#nextBtn').disabled=false;
-    qProg.style.width=((qIdx+1)/QUESTIONS.length*100)+'%';
-    if(qIdx===QUESTIONS.length-1) $('#nextBtn').textContent='看成績 🏆';
-  }
-
-  function nextQ(){
-    if(qIdx<QUESTIONS.length-1){ qIdx++; renderQuestion(); }
-    else showResult();
-  }
-
-  function showResult(){
-    qCount.textContent='完成！';
-    qProg.style.width='100%';
-    var pct=Math.round(score/QUESTIONS.length*100);
-    var medal,title,msg;
-    if(score===QUESTIONS.length){medal='🏆';title='調酒師大師！';msg='全部答對，你已經完全掌握花青素變色和比重漸層的秘密了，太厲害了！';}
-    else if(score>=8){medal='🥇';title='厲害的小化學家';msg='非常好！你對酸鹼變色和漸層飲料都很有概念，再複習一下就滿分了。';}
-    else if(score>=6){medal='🥈';title='很有潛力的調酒學徒';msg='不錯喔！再回去玩玩兩個實驗，注意顏色和重量的變化，下次一定更高分。';}
-    else if(score>=4){medal='🥉';title='繼續加油';msg='已經學到一些囉！建議再操作一次「變色魔法」和「漸層調酒」，會更清楚原理。';}
-    else {medal='🌱';title='剛起步的探險家';msg='沒關係，科學要動手玩才會懂！回到前兩關多試幾次，再來挑戰一次吧。';}
-
-    qBody.innerHTML=
-      '<div class="result">'+
-        '<div class="medal">'+medal+'</div>'+
-        '<div class="score">'+score+'<span>/'+QUESTIONS.length+'</span></div>'+
-        '<h3 class="card">'+title+'</h3>'+
-        '<p>'+msg+'　（答對率 '+pct+'%）</p>'+
-        '<button class="retry" id="retryBtn">↺ 再挑戰一次</button>'+
-      '</div>';
-    // 修正 h3 誤用 class
-    var h=qBody.querySelector('h3'); if(h){h.className='';}
-    $('#retryBtn').addEventListener('click',function(){
-      qIdx=0; score=0; renderQuestion();
-    });
-  }
-
-  renderQuestion();
-})();
+});
 </script>
 </body>
 </html>
