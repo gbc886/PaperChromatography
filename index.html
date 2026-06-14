@@ -162,17 +162,11 @@
   .dot{position:absolute;left:50%;transform:translateX(-50%);width:11px;height:11px;border-radius:50%;
     opacity:0;transition:opacity .5s, background .2s; filter:blur(.3px)}
   .beaker.mini .dot{width:9px;height:9px}
-  /* 噴射式色帶：底部為尾、頂部為頭，靠高度拉長形成拖尾 */
+  /* 噴射式色帶：底部為尾、頂部為頭，靠高度拉長形成拖尾。漸層由 JS 以 rgba 產生（相容舊瀏覽器） */
   .band{position:absolute;left:50%;transform:translateX(-50%);width:18px;height:0;
     border-radius:9px 9px 7px 7px;opacity:0;filter:blur(1px);
     --bandc:#fff;
-    background:linear-gradient(180deg,
-      var(--bandc) 0%,
-      var(--bandc) 20%,
-      color-mix(in srgb, var(--bandc) 60%, transparent) 42%,
-      color-mix(in srgb, var(--bandc) 28%, transparent) 65%,
-      color-mix(in srgb, var(--bandc) 8%, transparent) 84%,
-      transparent 100%);
+    background:var(--bandc);
     transform-origin:bottom center;}
   .beaker.mini .band{width:14px}
   .band .head{position:absolute;top:-2px;left:50%;transform:translateX(-50%);
@@ -228,16 +222,11 @@
   .track-wrap{display:flex;gap:18px;justify-content:center;margin:14px 0 6px}
   .track{position:relative;width:46px;height:150px;border-radius:7px;background:linear-gradient(180deg,#f3efe6,#e7e0d0);overflow:hidden;border:1px solid rgba(0,0,0,.18)}
   .track .tline{position:absolute;left:0;right:0;bottom:18px;border-top:1.5px dashed #b9aa86}
-  /* 噴射拖尾的色點：尾端固定在虛線、頭部往上衝 */
+  /* 噴射拖尾的色點：尾端固定在虛線、頭部往上衝。漸層由 JS 產生 */
   .track .tdot{position:absolute;left:50%;bottom:13px;transform:translateX(-50%);
     width:11px;height:11px;border-radius:50% 50% 50% 50%;transform-origin:bottom center;
     --tc:#ffe066;filter:blur(.4px);
-    background:linear-gradient(180deg,
-      var(--tc) 0%, var(--tc) 22%,
-      color-mix(in srgb, var(--tc) 60%, transparent) 46%,
-      color-mix(in srgb, var(--tc) 26%, transparent) 70%,
-      color-mix(in srgb, var(--tc) 6%, transparent) 86%,
-      transparent 100%);}
+    background:var(--tc);}
   .track .tdot .thead{position:absolute;top:-1px;left:50%;transform:translateX(-50%);
     width:104%;height:11px;border-radius:50%;background:var(--tc);filter:blur(.3px)}
   .track-cap{font-size:11.5px;text-align:center;color:var(--ink-soft);margin-top:6px}
@@ -311,11 +300,7 @@
   .dyk-band{position:absolute;left:50%;bottom:11px;transform:translateX(-50%);
     width:13px;height:9px;border-radius:50%;transform-origin:bottom center;
     --dc:#fff;filter:blur(.6px);
-    background:linear-gradient(180deg,
-      var(--dc) 0%, var(--dc) 24%,
-      color-mix(in srgb, var(--dc) 58%, transparent) 48%,
-      color-mix(in srgb, var(--dc) 24%, transparent) 72%,
-      transparent 100%);}
+    background:var(--dc);}
   .dyk-band .dhead{position:absolute;top:-1px;left:50%;transform:translateX(-50%);
     width:104%;height:9px;border-radius:50%;background:var(--dc);filter:blur(.3px)}
   .case-row{display:flex;gap:16px;justify-content:center;align-items:stretch;flex-wrap:wrap;margin:16px 0 4px}
@@ -668,6 +653,22 @@ const PENS = {
 
 const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+/* ============ 拖尾漸層：用 rgba 產生，避免依賴 color-mix（舊瀏覽器相容） ============ */
+function hexToRgb(h){
+  h=(h||'').replace('#','');
+  if(h.length===3) h=h.split('').map(c=>c+c).join('');
+  const n=parseInt(h||'ffffff',16);
+  return [(n>>16)&255,(n>>8)&255,n&255];
+}
+function fadeGrad(hex, stops){
+  const [r,g,b]=hexToRgb(hex);
+  const parts = stops.map(s=>'rgba('+r+','+g+','+b+','+s[1]+') '+s[0]+'%');
+  return 'linear-gradient(180deg,'+parts.join(',')+')';
+}
+const BAND_STOPS =[[0,1],[20,1],[42,0.6],[65,0.28],[84,0.08],[100,0]];
+const TRACK_STOPS=[[0,1],[22,1],[46,0.6],[70,0.26],[86,0.06],[100,0]];
+const DYK_STOPS  =[[0,1],[24,1],[48,0.58],[72,0.24],[100,0]];
+
 /* ============ 通用：在某個 paper 上跑色層分析動畫 ============ */
 function setupStrip(paperEl){
   const h = paperEl.clientHeight;
@@ -700,6 +701,7 @@ function runStrip(paperEl, pen, opts){
     const el = document.createElement('div');
     el.className = 'band';
     el.style.setProperty('--bandc', b.c);
+    el.style.background = fadeGrad(b.c, BAND_STOPS);   // rgba 拖尾（相容舊瀏覽器）
     const k = (b.k==null?1:b.k);
     el.style.width = (baseW * (0.62 + 0.38*k)) + 'px';   // 濃→較粗，淡→較細
     el.style.bottom = (geo.baseFromBottom-2)+'px';
@@ -899,6 +901,8 @@ document.getElementById('capBtn').addEventListener('click', ()=>{
 /* ============ 附著力 比一比（噴射拖尾） ============ */
 const dotHigh=document.getElementById('dotHigh');
 const dotLow=document.getElementById('dotLow');
+dotHigh.style.background = fadeGrad('#ffe066', TRACK_STOPS);   // rgba 拖尾（相容舊瀏覽器）
+dotLow.style.background  = fadeGrad('#5cd6ff', TRACK_STOPS);
 const DOT_BASE_H=11;  // 圓點原始直徑
 function jetDot(el, targetY, dur){
   const easeJet = t => t<0?0 : 1 - Math.pow(1-t, 3);
@@ -1086,6 +1090,7 @@ function renderDyk(el,pat,animate){
   const bands = pat.map(b=>{
     const d=document.createElement('div');d.className='dyk-band';
     d.style.setProperty('--dc', b.c);
+    d.style.background = fadeGrad(b.c, DYK_STOPS);   // rgba 拖尾（相容舊瀏覽器）
     d.innerHTML='<div class="dhead"></div>';
     el.appendChild(d);
     return {el:d, rf:b.rf};
